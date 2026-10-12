@@ -10,8 +10,8 @@ select-then-calibrate method must clear.
 Phase B (after freeze): the SCRC method (`riskcontrol.crc_radius` on the SELECTED calib
 fold + an online shift-robust variant) and the G-RISK / G-NULL gate evaluation.
 
-Run: python src/run_p9.py --baseline     (Phase A, method-blind)
-     python src/run_p9.py                 (full, after the pre-reg is frozen)
+Run: python experiments/run_p9.py --baseline     (Phase A, method-blind)
+     python experiments/run_p9.py                 (full, after the pre-reg is frozen)
 """
 
 from __future__ import annotations
@@ -23,13 +23,13 @@ import pandas as pd
 
 import run_p2 as P
 from _common import PROC
-from conformal import _conf_quantile
-from eval import clustered_bootstrap, coverage
-from learners import fit_mean, fit_quantile
 from panel import FEATURE_COLS
-from riskcontrol import crc_radius, loss_miss_magnitude, scrc, scrc_aci
 from run_p2 import ALPHA, SEEDS, TARGET, _split, _xy
-from selective import name_uncertainty, selective_scores
+from selective_conformal.conformal import _conf_quantile
+from selective_conformal.learners import fit_mean, fit_quantile
+from selective_conformal.metrics import clustered_bootstrap, coverage
+from selective_conformal.riskcontrol import crc_radius, loss_miss_magnitude, scrc, scrc_aci
+from selective_conformal.selective import name_uncertainty, selective_scores
 from synthetic import generate
 
 R_RET = 0.70                       # retention (a priori, matches P2 X_RET)

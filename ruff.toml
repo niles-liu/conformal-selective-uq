@@ -1,8 +1,9 @@
-# Lint config for the method and experiment code. The printed numbers are recorded
-# results, so the rule set targets real defects, not cosmetic rewrites.
-# Run from the repository root: ruff check src examples
+# Lint config for the package, the experiment drivers, the examples and the tests.
+# The printed numbers are recorded results, so the rule set targets real defects, not
+# cosmetic rewrites. Run from the repository root: ruff check .
 line-length = 120
-target-version = "py312"
+target-version = "py310"
+src = ["src", "experiments"]
 
 [lint]
 # E4/E9 + W + F + I + B + BLE is the defect core; RUF100 keeps every noqa load-bearing.

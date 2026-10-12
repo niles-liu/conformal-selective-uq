@@ -14,7 +14,7 @@ Gate-first spec: reports/p23_adaptive_preregistration.md. Primary gate G-SHIFT-C
 missed), co-primary G-EFFICIENCY (tighter than the union) + G-BASE-CALIB (base stays calibrated).
 The frozen aci_cqr / aci_cqr_multi / cqr_conditional / cqr_conditional_aci are untouched.
 
-Run: python src/run_p23.py
+Run: python experiments/run_p23.py
 """
 from __future__ import annotations
 
@@ -23,11 +23,17 @@ import pandas as pd
 
 import run_p2 as P
 from _common import PROC
-from conformal import aci_cqr, aci_cqr_multi, cqr_conditional, cqr_conditional_aci, cqr_conditional_gaci
-from eval import clustered_bootstrap, coverage, mean_width
 from panel import FEATURE_COLS, GROUP_COLS
 from run_p2 import ALPHA, GAMMA, MIN_N, SEEDS, TARGET, TAU, TAU_SHIFT, WG_FLOOR, _selective, _split, _xy
 from run_p22 import _axis_labels, _cov3, _ev, _full_base_signed_gaps, _retained_signed_gaps
+from selective_conformal.conformal import (
+    aci_cqr,
+    aci_cqr_multi,
+    cqr_conditional,
+    cqr_conditional_aci,
+    cqr_conditional_gaci,
+)
+from selective_conformal.metrics import clustered_bootstrap, coverage, mean_width
 from synthetic import generate
 
 METHODS = ["ACI single-axis", "ACI multi-axis", "cqr_conditional", "cond+ACI", "cond+gACI"]

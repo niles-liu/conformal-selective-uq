@@ -4,6 +4,11 @@ Mean learner: a LightGBM regressor (squared loss). Quantile learners: LightGBM w
 the pinball objective at the lower/upper levels, the body of CQR. Thin wrappers so
 `conformal.py` stays about conformal math, not model config. Frozen hyper-params
 (no per-phase tuning, by gate-first discipline).
+
+Every method in `conformal.py` takes an optional `learner=`: any object with
+`fit_mean(X, y)` and `fit_quantile(X, y, level)` that return fitted models with a
+`.predict(X)` method. Leaving it out uses `LightGBMLearner`, the frozen default that
+produced every published number.
 """
 
 from __future__ import annotations
@@ -36,3 +41,13 @@ def fit_quantile(X: np.ndarray, y: np.ndarray, alpha: float) -> LGBMRegressor:
     m = LGBMRegressor(objective="quantile", alpha=alpha, **PARAMS)
     m.fit(X, y)
     return m
+
+
+class LightGBMLearner:
+    """The frozen default learner: `fit_mean` and `fit_quantile` with `PARAMS`."""
+
+    def fit_mean(self, X: np.ndarray, y: np.ndarray) -> LGBMRegressor:
+        return fit_mean(X, y)
+
+    def fit_quantile(self, X: np.ndarray, y: np.ndarray, level: float) -> LGBMRegressor:
+        return fit_quantile(X, y, level)

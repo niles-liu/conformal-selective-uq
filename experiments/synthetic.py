@@ -39,7 +39,7 @@ recoverable R^2 lands near 0.40 (a deliberately hard but non-trivial recoverable
 fraction). Determinism: given the panel file, everything flows from `seed`, so the
 same seed gives an identical target.
 
-Run: python src/synthetic.py --seed 0     (writes data/processed/synth_1a_seed0.parquet)
+Run: python experiments/synthetic.py --seed 0     (writes data/processed/synth_1a_seed0.parquet)
 The cache is written only after the target is fully built, via a temp file and an
 atomic rename, so a failed run never leaves a broken cache behind.
 """
@@ -75,8 +75,15 @@ def _zscore_by_date(df: pd.DataFrame, col: str) -> pd.Series:
     return (df[col] - g.transform("mean")) / g.transform("std").replace(0, np.nan)
 
 
-def generate(seed: int = 0) -> pd.DataFrame:
-    panel = pd.read_parquet(PANEL).sort_values(["date", "ticker"]).reset_index(drop=True)
+def generate(seed: int = 0, panel: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Build the Layer 1a target for `seed` from the cached panel and cache it.
+
+    `panel` (for tests): build from this frame instead of the panel file; nothing is
+    written. The draws are the same either way, so a frame equal to the panel file
+    gives the identical target."""
+    from_file = panel is None
+    panel = pd.read_parquet(PANEL) if from_file else panel.copy()
+    panel = panel.sort_values(["date", "ticker"]).reset_index(drop=True)
     n_rows = len(panel)
     rng = np.random.default_rng(seed)
 
@@ -84,7 +91,7 @@ def generate(seed: int = 0) -> pd.DataFrame:
     pub = pd.Series(0.0, index=panel.index)
     for f, load in PUB_FEATURES.items():
         if f not in panel.columns:
-            raise SystemExit(f"panel missing feature {f} — rebuild src/panel.py")
+            raise SystemExit(f"panel missing feature {f} — rebuild with experiments/panel.py")
         pub = pub + load * _zscore_by_date(panel, f).fillna(0.0)
     panel["pub_signal"] = pub
 
@@ -199,8 +206,9 @@ def generate(seed: int = 0) -> pd.DataFrame:
     print(f"  ceiling R^2 (y ~ recoverable_term): {r2_ceiling:.3f}  "
           f"(design target ~0.40)")
     print(f"  shift regime {SHIFT_REGIME}: overlay amp x{SHIFT_AMP}")
-    write_parquet_atomic(panel, out)  # only now, after every step above succeeded
-    print(f"  wrote {out.name}")
+    if from_file:
+        write_parquet_atomic(panel, out)  # only now, after every step above succeeded
+        print(f"  wrote {out.name}")
     return panel
 
 

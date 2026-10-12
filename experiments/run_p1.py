@@ -13,7 +13,7 @@ Splits (walk-forward, blocked over time; report_date = YYYYMMDD int):
   CALIB  20210101..20211231  (calm, PRE-shift conformal calibration)
   TEST   rd >= 20220101   (2022 = amplified-overlay shift regime; 2023-24 = base)
 
-Run: python src/run_p1.py            (1a seeds {0,1,2} + 1b)
+Run: python experiments/run_p1.py            (1a seeds {0,1,2} + 1b)
 """
 
 from __future__ import annotations
@@ -22,9 +22,9 @@ import numpy as np
 import pandas as pd
 
 from _common import PROC, RETURNS
-from conformal import cqr, naive_split
-from eval import clustered_bootstrap, coverage, mean_width, risk_coverage, worst_group_coverage
 from panel import FEATURE_COLS, GROUP_COLS, PANEL
+from selective_conformal.conformal import cqr, naive_split
+from selective_conformal.metrics import clustered_bootstrap, coverage, mean_width, risk_coverage, worst_group_coverage
 from synthetic import generate
 
 ALPHA = 0.10

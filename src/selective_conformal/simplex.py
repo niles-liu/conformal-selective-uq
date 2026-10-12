@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from conformal import _conf_quantile
+from .conformal import _conf_quantile
 
 COMPO_EPS = 1e-6          # multiplicative zero-replacement floor (frozen, CoDA standard)
 BASE_COEF = 0.5           # base_logit = BASE_COEF * z_date(log_dollar_vol) (synthetic.py)

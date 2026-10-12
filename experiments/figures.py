@@ -6,7 +6,7 @@ in the results tables (reports/p2_method_results.md). Each title says so.
   fig2_coverage_shift.png     G-SHIFT: base vs drawdown coverage, naive vs group-conditional ACI
   fig3_mechanism.png          G-MECHANISM: per-name uncertainty u_i vs the KNOWN irreducible floor
 
-Reuses the frozen P2 pipeline (run_p2). Run: python src/figures.py
+Reuses the frozen P2 pipeline (run_p2). Run: python experiments/figures.py
 """
 from __future__ import annotations
 
@@ -21,9 +21,9 @@ import pandas as pd
 
 import run_p2 as R
 from _common import PROC
-from eval import risk_coverage
 from panel import FEATURE_COLS
-from selective import _spearman
+from selective_conformal.metrics import risk_coverage
+from selective_conformal.selective import _spearman
 from synthetic import generate
 
 FIGDIR = Path(__file__).resolve().parents[1] / "figures"

@@ -11,7 +11,7 @@ Report gates (descriptive — P10 is a comparator, not a ship/reject method):
   * G-LOCAL-TIGHTER — localized width < Mondrian width at comparable base worst-group
                       coverage (the continuous-conditioning efficiency question)
 
-Run: python src/run_p10.py
+Run: python experiments/run_p10.py
 """
 
 from __future__ import annotations
@@ -21,11 +21,11 @@ import pandas as pd
 
 import run_p2 as P
 from _common import PROC
-from conformal import cqr, cqr_conditional, localized_cqr, mondrian_cqr, naive_split
-from eval import mean_width, worst_group_coverage
 from panel import FEATURE_COLS, GROUP_COLS
 from run_p2 import ALPHA, MIN_N, SEEDS, TARGET, TAU, _cov3, _grp, _split, _xy
 from run_p22 import _axis_labels
+from selective_conformal.conformal import cqr, cqr_conditional, localized_cqr, mondrian_cqr, naive_split
+from selective_conformal.metrics import mean_width, worst_group_coverage
 from synthetic import generate
 
 METHODS = ["naive", "cqr", "mondrian", "cqr_conditional", "localized"]

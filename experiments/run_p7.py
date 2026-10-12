@@ -13,7 +13,7 @@ efficiency) + the static shape. Gate-first spec: reports/p7_levelcomb_preregistr
 Primary gate G-GROUP-HELPS: gqACI-max worst-group|shift beats BOTH cond+qACI (~0.683) and
 cond+gqACI (~0.655); co-primaries G-BASE-CALIB (+/-tau) + G-EFFICIENCY (< union).
 
-Run: python src/run_p7.py
+Run: python experiments/run_p7.py
 """
 from __future__ import annotations
 
@@ -22,7 +22,11 @@ import pandas as pd
 
 import run_p2 as P
 from _common import PROC
-from conformal import (
+from panel import FEATURE_COLS, GROUP_COLS
+from run_p2 import ALPHA, GAMMA, MIN_N, SEEDS, TARGET, TAU, TAU_SHIFT, WG_FLOOR, _selective, _split, _xy
+from run_p22 import _axis_labels, _cov3, _ev, _retained_signed_gaps
+from run_p23 import _full_base_signed_gaps
+from selective_conformal.conformal import (
     _alpha_precompute,
     aci_cqr_multi,
     cqr_conditional,
@@ -31,11 +35,7 @@ from conformal import (
     cqr_conditional_gqaci_max,
     cqr_conditional_qaci,
 )
-from eval import clustered_bootstrap, coverage, mean_width
-from panel import FEATURE_COLS, GROUP_COLS
-from run_p2 import ALPHA, GAMMA, MIN_N, SEEDS, TARGET, TAU, TAU_SHIFT, WG_FLOOR, _selective, _split, _xy
-from run_p22 import _axis_labels, _cov3, _ev, _retained_signed_gaps
-from run_p23 import _full_base_signed_gaps
+from selective_conformal.metrics import clustered_bootstrap, coverage, mean_width
 from synthetic import generate
 
 METHODS = ["ACI multi-axis", "cqr_conditional", "cond+qACI", "cond+gqACI",

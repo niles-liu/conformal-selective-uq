@@ -6,7 +6,7 @@ conditional-coverage gap P2 left open (sector ~1pp over tau), without over-corre
 Gate-first spec: reports/p21_multiaxis_preregistration.md.
 The frozen single-axis aci_cqr is untouched; this only adds aci_cqr_multi.
 
-Run: python src/run_p21.py
+Run: python experiments/run_p21.py
 """
 from __future__ import annotations
 
@@ -15,10 +15,16 @@ import pandas as pd
 
 import run_p2 as P
 from _common import PROC
-from conformal import aci_cqr, aci_cqr_multi
-from eval import clustered_bootstrap, coverage, grouped_coverage, mean_width, worst_group_coverage
 from panel import FEATURE_COLS, GROUP_COLS
 from run_p2 import ALPHA, GAMMA, MIN_N, SEEDS, TARGET, TAU, TAU_SHIFT, WG_FLOOR, X_RET, _selective, _split, _xy
+from selective_conformal.conformal import aci_cqr, aci_cqr_multi
+from selective_conformal.metrics import (
+    clustered_bootstrap,
+    coverage,
+    grouped_coverage,
+    mean_width,
+    worst_group_coverage,
+)
 from synthetic import generate
 
 

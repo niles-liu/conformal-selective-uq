@@ -10,7 +10,7 @@ session stream. Demonstration (reporting-only, no interval method changed):
   * naive over the BASE-ONLY stream (2023-24) -> should NOT cross (no false alarm under
     nominal coverage).
 
-Run: python src/run_p11.py
+Run: python experiments/run_p11.py
 """
 
 from __future__ import annotations
@@ -19,9 +19,9 @@ import numpy as np
 import pandas as pd
 
 from _common import PROC
-from evalue_monitor import detect
 from panel import FEATURE_COLS
 from run_p2 import ALPHA, SEEDS, SHIFT_HI, SHIFT_LO, _intervals, _split
+from selective_conformal.evalue_monitor import detect
 from synthetic import generate
 
 DELTA = 0.05                 # anytime-valid level -> alarm threshold 1/delta = 20 (frozen)

@@ -13,7 +13,7 @@ conditional threshold deliver the *calibrated* multi-group coverage the union sa
 strictly tighter than the union? The frozen aci_cqr / aci_cqr_multi are untouched.
 Also prints the report-only full-base diagnostic (table (b) of the results file).
 
-Run: python src/run_p22.py
+Run: python experiments/run_p22.py
 """
 from __future__ import annotations
 
@@ -22,10 +22,16 @@ import pandas as pd
 
 import run_p2 as P
 from _common import PROC
-from conformal import aci_cqr, aci_cqr_multi, cqr_conditional, cqr_conditional_aci
-from eval import clustered_bootstrap, coverage, grouped_coverage, mean_width, worst_group_coverage
 from panel import FEATURE_COLS, GROUP_COLS
 from run_p2 import ALPHA, GAMMA, MIN_N, SEEDS, TARGET, TAU, TAU_SHIFT, WG_FLOOR, X_RET, _selective, _split, _xy
+from selective_conformal.conformal import aci_cqr, aci_cqr_multi, cqr_conditional, cqr_conditional_aci
+from selective_conformal.metrics import (
+    clustered_bootstrap,
+    coverage,
+    grouped_coverage,
+    mean_width,
+    worst_group_coverage,
+)
 from synthetic import generate
 
 

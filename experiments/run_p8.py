@@ -11,8 +11,8 @@ to the simplex).
 
 Layers: 1a only (the compositional substrate). 1b is forward *returns*, not a composition, so
 P8 has no real-data read in this repository. Run:
-    python src/run_p8.py --baseline
-    python src/run_p8.py
+    python experiments/run_p8.py --baseline
+    python experiments/run_p8.py
 """
 
 from __future__ import annotations
@@ -24,11 +24,11 @@ import pandas as pd
 from scipy import stats
 
 from _common import PROC
-from conformal import cqr
-from learners import fit_mean
 from panel import FEATURE_COLS
 from run_p2 import ALPHA, SEEDS, TARGET, TAU, TAU_SHIFT, THETA_AUC, THETA_RHO, _split, _xy  # reuse frozen tolerances
-from simplex import aci_radius_path, aitchison, clr_dev, region_radius, softmax, tv
+from selective_conformal.conformal import cqr
+from selective_conformal.learners import fit_mean
+from selective_conformal.simplex import aci_radius_path, aitchison, clr_dev, region_radius, softmax, tv
 from synthetic import generate
 
 GAMMA = 0.05

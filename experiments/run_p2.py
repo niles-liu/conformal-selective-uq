@@ -8,7 +8,7 @@ The method (all public-feature-only, knobs frozen in reports/p2_method_preregist
   * G-NULL: shuffle y within date -> the selective advantage must collapse
 
 Splits identical to P1: train rd<20210101 | calib 2021 | test rd>=20220101.
-Run: python src/run_p2.py
+Run: python experiments/run_p2.py
 """
 
 from __future__ import annotations
@@ -17,11 +17,18 @@ import numpy as np
 import pandas as pd
 
 from _common import PANEL, PROC, RETURNS
-from conformal import aci_cqr, cqr, mondrian_cqr, naive_split, weighted_cqr
-from eval import clustered_bootstrap, coverage, grouped_coverage, mean_width, risk_coverage, worst_group_coverage
-from learners import fit_mean
 from panel import FEATURE_COLS, GROUP_COLS
-from selective import mechanism_auc, mechanism_corr, name_uncertainty, selective_scores
+from selective_conformal.conformal import aci_cqr, cqr, mondrian_cqr, naive_split, weighted_cqr
+from selective_conformal.learners import fit_mean
+from selective_conformal.metrics import (
+    clustered_bootstrap,
+    coverage,
+    grouped_coverage,
+    mean_width,
+    risk_coverage,
+    worst_group_coverage,
+)
+from selective_conformal.selective import mechanism_auc, mechanism_corr, name_uncertainty, selective_scores
 from synthetic import generate
 
 ALPHA = 0.10

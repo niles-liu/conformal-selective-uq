@@ -1,17 +1,11 @@
-"""Quickstart on toy data: no network, about 5 s. Run from the repo root:
+"""Quickstart on toy data: no network, about 5 s. After `pip install -e .`:
     python examples/quickstart.py
 """
-import sys
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from conformal import aci_cqr, cqr
-from eval import coverage, risk_coverage
-from learners import fit_mean
-from selective import name_uncertainty, selective_scores
+from selective_conformal import aci_cqr, coverage, cqr, name_uncertainty, risk_coverage, selective_scores
+from selective_conformal.learners import fit_mean
 
 # 30 units, each with its own noise level; the noise doubles at time step 100 (the shift)
 rng = np.random.default_rng(0)

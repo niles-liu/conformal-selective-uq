@@ -18,8 +18,8 @@ Features (all LAGGED >= 1 session — known strictly before the decision date):
 Group labels for conditional coverage (Mondrian groups): sector, cap_tier,
 momentum_decile (per-date decile of mom_126).
 
-Run: python src/panel.py            (pull prices + build panel)
-     python src/panel.py --build    (rebuild panel from cached prices only)
+Run: python experiments/panel.py            (pull prices + build panel)
+     python experiments/panel.py --build    (rebuild panel from cached prices only)
 
 The pull fails loudly if any ticker cannot be downloaded, since a silently smaller
 universe would shift every downstream number. `--allow-missing` overrides that.

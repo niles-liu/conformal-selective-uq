@@ -17,7 +17,7 @@ floor) AND G-EFFICIENCY (tighter than union) all pass on 1a. G-ALPHA-FIX (report
 mechanism: alpha-space base closer to nominal than width-space. A report-only alpha_eff probe
 on seed 0 (where the realised level sits against its clamp) is printed after it.
 
-Run: python src/run_p6.py
+Run: python experiments/run_p6.py
 """
 from __future__ import annotations
 
@@ -26,17 +26,6 @@ import pandas as pd
 
 import run_p2 as P
 from _common import PROC
-from conformal import (
-    _QACI_GRID,
-    aci_cqr,
-    aci_cqr_multi,
-    cqr_conditional,
-    cqr_conditional_aci,
-    cqr_conditional_gaci,
-    cqr_conditional_gqaci,
-    cqr_conditional_qaci,
-)
-from eval import clustered_bootstrap, coverage, mean_width
 from panel import FEATURE_COLS, GROUP_COLS
 from run_p2 import (
     ALPHA,
@@ -55,6 +44,17 @@ from run_p2 import (
 )
 from run_p22 import _axis_labels, _cov3, _ev, _retained_signed_gaps
 from run_p23 import _full_base_signed_gaps
+from selective_conformal.conformal import (
+    _QACI_GRID,
+    aci_cqr,
+    aci_cqr_multi,
+    cqr_conditional,
+    cqr_conditional_aci,
+    cqr_conditional_gaci,
+    cqr_conditional_gqaci,
+    cqr_conditional_qaci,
+)
+from selective_conformal.metrics import clustered_bootstrap, coverage, mean_width
 from synthetic import generate
 
 METHODS = ["ACI single-axis", "ACI multi-axis", "cqr_conditional", "cond+ACI",

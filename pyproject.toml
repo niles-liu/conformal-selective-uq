@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "selective-conformal"
+version = "0.3.0"
+description = "Selective conformal regression under distribution shift: split, group-conditional and online conformal intervals with a per-unit abstention score"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Niles Liu" }]
+keywords = [
+    "conformal-prediction", "uncertainty-quantification", "selective-prediction",
+    "distribution-shift", "quantile-regression", "adaptive-conformal-inference",
+]
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "lightgbm>=4.1",
+]
+
+[project.optional-dependencies]
+experiments = [
+    "pyarrow>=14",
+    "matplotlib>=3.8",
+    "yfinance>=0.2.40",
+]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.urls]
+Repository = "https://github.com/niles-liu/conformal-selective-uq"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

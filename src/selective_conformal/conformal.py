@@ -18,7 +18,14 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from learners import fit_mean, fit_quantile
+from .learners import LightGBMLearner
+
+_DEFAULT_LEARNER = LightGBMLearner()
+
+
+def _lrn(learner):
+    """The learner to fit with: the caller's, else the frozen LightGBM default."""
+    return _DEFAULT_LEARNER if learner is None else learner
 
 
 def _conf_quantile(scores: np.ndarray, alpha: float) -> float:
@@ -43,11 +50,11 @@ class Intervals:
 def naive_split(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray,
-    Xte: np.ndarray, alpha: float = 0.10,
+    Xte: np.ndarray, alpha: float = 0.10, *, learner=None,
 ) -> Intervals:
     """Baseline #1 — naive split-conformal (marginal). Nonconformity = |y - yhat|;
     symmetric interval yhat +/- q."""
-    mean = fit_mean(Xtr, ytr)
+    mean = _lrn(learner).fit_mean(Xtr, ytr)
     resid = np.abs(ycal - mean.predict(Xcal))
     q = _conf_quantile(resid, alpha)
     pred = mean.predict(Xte)
@@ -57,13 +64,14 @@ def naive_split(
 def cqr(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray,
-    Xte: np.ndarray, alpha: float = 0.10,
+    Xte: np.ndarray, alpha: float = 0.10, *, learner=None,
 ) -> Intervals:
     """Baseline #2 / method body — conformalized quantile regression (Romano 2019).
     Conformity E = max(qlo - y, y - qhi); interval [qlo - Q, qhi + Q]."""
-    mean = fit_mean(Xtr, ytr)
-    qlo = fit_quantile(Xtr, ytr, alpha / 2)
-    qhi = fit_quantile(Xtr, ytr, 1 - alpha / 2)
+    lrn = _lrn(learner)
+    mean = lrn.fit_mean(Xtr, ytr)
+    qlo = lrn.fit_quantile(Xtr, ytr, alpha / 2)
+    qhi = lrn.fit_quantile(Xtr, ytr, 1 - alpha / 2)
     lo_cal, hi_cal = qlo.predict(Xcal), qhi.predict(Xcal)
     E = np.maximum(lo_cal - ycal, ycal - hi_cal)
     Q = _conf_quantile(E, alpha)
@@ -73,14 +81,69 @@ def cqr(
 
 
 # --------------------------------------------------------------------------- #
+# Bring your own quantiles: the conformal step alone, on precomputed bands     #
+# --------------------------------------------------------------------------- #
+# For a user whose model already emits lower/upper quantile predictions (any model,
+# any library), these apply the calibration step without fitting anything. Each
+# returns (lo, hi) arrays for the test rows. With the default learner's quantiles they
+# reproduce `cqr`, `mondrian_cqr` and `aci_cqr` exactly (tests/test_conformal.py).
+def conformity_scores(lo_cal: np.ndarray, hi_cal: np.ndarray, ycal: np.ndarray) -> np.ndarray:
+    """CQR conformity scores E = max(lo - y, y - hi) on the calibration rows."""
+    lo_cal, hi_cal, ycal = (np.asarray(a, float) for a in (lo_cal, hi_cal, ycal))
+    return np.maximum(lo_cal - ycal, ycal - hi_cal)
+
+
+def cqr_from_quantiles(
+    lo_cal: np.ndarray, hi_cal: np.ndarray, ycal: np.ndarray,
+    lo_te: np.ndarray, hi_te: np.ndarray, alpha: float = 0.10,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Split CQR on precomputed quantile bands: one conformal radius for every test row."""
+    Q = _conf_quantile(conformity_scores(lo_cal, hi_cal, ycal), alpha)
+    return np.asarray(lo_te, float) - Q, np.asarray(hi_te, float) + Q
+
+
+def mondrian_from_quantiles(
+    lo_cal: np.ndarray, hi_cal: np.ndarray, ycal: np.ndarray, gcal: np.ndarray,
+    lo_te: np.ndarray, hi_te: np.ndarray, gte: np.ndarray,
+    alpha: float = 0.10, min_n: int = 50,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Group-conditional (Mondrian) CQR on precomputed bands: a radius per group with at
+    least `min_n` calibration rows, the global radius otherwise."""
+    E = conformity_scores(lo_cal, hi_cal, ycal)
+    gcal, gte = np.asarray(gcal), np.asarray(gte)
+    Q_global = _conf_quantile(E, alpha)
+    Qg = {g: _conf_quantile(E[gcal == g], alpha)
+          for g in np.unique(gcal) if (gcal == g).sum() >= min_n}
+    Q_te = np.array([Qg.get(g, Q_global) for g in gte])
+    return np.asarray(lo_te, float) - Q_te, np.asarray(hi_te, float) + Q_te
+
+
+def aci_from_quantiles(
+    lo_cal: np.ndarray, hi_cal: np.ndarray, ycal: np.ndarray, gcal: np.ndarray,
+    lo_te: np.ndarray, hi_te: np.ndarray, yte: np.ndarray, te_order: np.ndarray,
+    gte: np.ndarray, alpha: float = 0.10, gamma: float = 0.05, min_n: int = 50,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Group-conditional ACI on precomputed bands (the online method of `aci_cqr`).
+
+    Test rows are processed in ascending `te_order` (e.g. the trading session); within a
+    step each group's interval uses only the level carried from earlier steps, and `yte`
+    for that step is read only after its intervals are set."""
+    E = conformity_scores(lo_cal, hi_cal, ycal)
+    yte, te_order = np.asarray(yte, float), np.asarray(te_order)
+    return _aci_one_axis(np.asarray(lo_te, float), np.asarray(hi_te, float), E,
+                         gcal, gte, yte, te_order, alpha, gamma, min_n)
+
+
+# --------------------------------------------------------------------------- #
 # P2 method layers                                                            #
 # --------------------------------------------------------------------------- #
-def _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha):
+def _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner=None):
     """Shared CQR body: fit mean + lo/hi quantile learners, return calib conformity
     scores E and the test-set lo/hi quantile predictions + mean prediction."""
-    mean = fit_mean(Xtr, ytr)
-    qlo = fit_quantile(Xtr, ytr, alpha / 2)
-    qhi = fit_quantile(Xtr, ytr, 1 - alpha / 2)
+    lrn = _lrn(learner)
+    mean = lrn.fit_mean(Xtr, ytr)
+    qlo = lrn.fit_quantile(Xtr, ytr, alpha / 2)
+    qhi = lrn.fit_quantile(Xtr, ytr, 1 - alpha / 2)
     E = np.maximum(qlo.predict(Xcal) - ycal, ycal - qhi.predict(Xcal))
     return mean.predict(Xte), qlo.predict(Xte), qhi.predict(Xte), E
 
@@ -89,12 +152,12 @@ def mondrian_cqr(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal: np.ndarray,
     Xte: np.ndarray, gte: np.ndarray,
-    alpha: float = 0.10, min_n: int = 50,
+    alpha: float = 0.10, min_n: int = 50, *, learner=None,
 ) -> Intervals:
     """#3 — group-conditional (Mondrian) CQR. A separate conformal quantile Q_g per
     group (groups with >= min_n calibration points); global Q fallback otherwise.
     Gives per-group marginal coverage by construction on the calibration distribution."""
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     gcal, gte = np.asarray(gcal), np.asarray(gte)
     Q_global = _conf_quantile(E, alpha)
     Qg = {g: _conf_quantile(E[gcal == g], alpha)
@@ -120,7 +183,7 @@ def aci_cqr(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal: np.ndarray,
     Xte: np.ndarray, yte: np.ndarray, te_order: np.ndarray, gte: np.ndarray,
-    alpha: float = 0.10, gamma: float = 0.05, min_n: int = 50,
+    alpha: float = 0.10, gamma: float = 0.05, min_n: int = 50, *, learner=None,
 ) -> Intervals:
     """#4 — group-conditional Adaptive Conformal Inference (Gibbs-Candes 2021, Mondrian
     variant) on the CQR scores. Per group g, an effective level alpha_{g,t} is carried
@@ -129,7 +192,7 @@ def aci_cqr(
     uses only alpha_{g,t} (carried from the past); y_t is revealed after the interval
     is emitted -> PIT-valid. Corrects the temporal coverage drift static conformal can't.
     """
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     gcal, gte = np.asarray(gcal), np.asarray(gte)
     yte, te_order = np.asarray(yte, float), np.asarray(te_order)
     Es_global = np.sort(E)
@@ -179,7 +242,7 @@ def aci_cqr_multi(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal_axes: list,
     Xte: np.ndarray, yte: np.ndarray, te_order: np.ndarray, gte_axes: list,
-    alpha: float = 0.10, gamma: float = 0.05, min_n: int = 50,
+    alpha: float = 0.10, gamma: float = 0.05, min_n: int = 50, *, learner=None,
 ) -> Intervals:
     """P2.1 — MULTI-AXIS group-conditional ACI. Runs an independent group-conditional
     ACI on EACH conditioning axis (sector / cap_tier / momentum-decile) over the shared
@@ -193,7 +256,7 @@ def aci_cqr_multi(
     efficiency/over-coverage tradeoff, reported, not hidden). The single-axis `aci_cqr`
     is left untouched — this is an additive variant, never a retune of the frozen knob.
     """
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     yte, te_order = np.asarray(yte, float), np.asarray(te_order)
     lo = np.full(len(Xte), np.inf)
     hi = np.full(len(Xte), -np.inf)
@@ -222,7 +285,7 @@ def _multiaxis_design(gcal_axes: list, gte_axes: list):
 def cqr_conditional(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal_axes: list,
-    Xte: np.ndarray, gte_axes: list, alpha: float = 0.10,
+    Xte: np.ndarray, gte_axes: list, alpha: float = 0.10, *, learner=None,
 ) -> Intervals:
     """P2.2 — CALIBRATED multi-group conditional conformal (Gibbs-Cherian-Candes 2023
     "Conformal Prediction with Conditional Guarantees", linear-class construction with
@@ -243,7 +306,7 @@ def cqr_conditional(
     """
     from sklearn.linear_model import QuantileRegressor
 
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     Phi_cal, Phi_te = _multiaxis_design(gcal_axes, gte_axes)
     qr = QuantileRegressor(quantile=1 - alpha, alpha=0.0, solver="highs",
                            fit_intercept=False)
@@ -261,7 +324,7 @@ def cqr_conditional_aci(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal_axes: list,
     Xte: np.ndarray, yte: np.ndarray, te_order: np.ndarray, gte_axes: list,
-    alpha: float = 0.10, gamma: float = 0.05,
+    alpha: float = 0.10, gamma: float = 0.05, *, learner=None,
 ) -> Intervals:
     """P2.2 (secondary, report-only) — the calibrated conditional threshold made
     shift-robust by a single GLOBAL online offset. The static t(x) (from cqr_conditional)
@@ -274,7 +337,7 @@ def cqr_conditional_aci(
     ACI's marginal shift correction, without the union's over-coverage."""
     from sklearn.linear_model import QuantileRegressor
 
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     Phi_cal, Phi_te = _multiaxis_design(gcal_axes, gte_axes)
     qr = QuantileRegressor(quantile=1 - alpha, alpha=0.0, solver="highs",
                            fit_intercept=False)
@@ -302,7 +365,7 @@ def cqr_conditional_gaci(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal_axes: list,
     Xte: np.ndarray, yte: np.ndarray, te_order: np.ndarray, gte_axes: list,
-    alpha: float = 0.10, gamma: float = 0.05,
+    alpha: float = 0.10, gamma: float = 0.05, *, learner=None,
 ) -> Intervals:
     """P2.3 — *per-group ADAPTIVE* conditional conformal. The calibrated conditional
     SHAPE of `cqr_conditional` (t(x)=phi(x)^T beta, the pinball-regression additive
@@ -328,7 +391,7 @@ def cqr_conditional_gaci(
     """
     from sklearn.linear_model import QuantileRegressor
 
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     Phi_cal, Phi_te = _multiaxis_design(gcal_axes, gte_axes)
     qr = QuantileRegressor(quantile=1 - alpha, alpha=0.0, solver="highs",
                            fit_intercept=False)
@@ -400,14 +463,14 @@ def _read_level(T_rows, cover, grid=_QACI_GRID):
     return np.array([np.interp(cover[i], grid, T_rows[i]) for i in range(len(cover))])
 
 
-def _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha=0.10):
+def _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha=0.10, learner=None):
     """Shared, deterministic prologue for every alpha-space variant: the CQR pieces
     (pred/lo_q/hi_q) + the rearranged test-set level-family thresholds T. The four
     alpha-space variants (qaci/gqaci/gqaci_max/gqaci_asym) differ ONLY in the online
     loop, so a driver can compute this ONCE per split and pass it as `precomp=` to all
     four — bit-identical to computing it inside each (the solver is deterministic), just
     ~4x cheaper (the 9 highs-solver quantile fits + 3 GBM fits run once, not four times)."""
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     Phi_cal, Phi_te = _multiaxis_design(gcal_axes, gte_axes)
     T = _fit_level_family(Phi_cal, E, Phi_te)
     return pred, lo_q, hi_q, T
@@ -417,7 +480,7 @@ def cqr_conditional_qaci(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal_axes: list,
     Xte: np.ndarray, yte: np.ndarray, te_order: np.ndarray, gte_axes: list,
-    alpha: float = 0.10, gamma: float = 0.05, precomp=None,
+    alpha: float = 0.10, gamma: float = 0.05, precomp=None, *, learner=None,
 ) -> Intervals:
     """P6 (global) — ALPHA-SPACE online adaptation on the single-regression conditional
     shape. The alpha-space analogue of `cqr_conditional_aci`: instead of adding a global
@@ -429,7 +492,7 @@ def cqr_conditional_qaci(
     unboundedly the way the width-space offset can (the hypothesized base self-correction).
     y_t revealed after session t's interval -> PIT-valid."""
     if precomp is None:
-        precomp = _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha)
+        precomp = _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha, learner)
     pred, lo_q, hi_q, T = precomp
     yte, te_order = np.asarray(yte, float), np.asarray(te_order)
     lmin, lmax = 1 - _QACI_GRID[-1], 1 - _QACI_GRID[0]      # alpha_eff in [0.01, 0.50]
@@ -454,6 +517,7 @@ def cqr_conditional_gqaci(
     Xcal: np.ndarray, ycal: np.ndarray, gcal_axes: list,
     Xte: np.ndarray, yte: np.ndarray, te_order: np.ndarray, gte_axes: list,
     alpha: float = 0.10, gamma: float = 0.05, precomp=None, trace: dict | None = None,
+    *, learner=None,
 ) -> Intervals:
     """P6 (group, HEADLINE) — *group-conditional* ALPHA-SPACE adaptation on the single-
     regression shape. The alpha-space analogue of `cqr_conditional_gaci` (P2.3): the
@@ -478,7 +542,7 @@ def cqr_conditional_gqaci(
     the clipped per-point alpha_eff and the global offset `a` carried into that session.
     It only records values; the intervals are identical with or without it."""
     if precomp is None:
-        precomp = _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha)
+        precomp = _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha, learner)
     pred, lo_q, hi_q, T = precomp
     yte, te_order = np.asarray(yte, float), np.asarray(te_order)
     gte_axes = [np.asarray(g).astype(str) for g in gte_axes]
@@ -520,7 +584,7 @@ def cqr_conditional_gqaci_max(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal_axes: list,
     Xte: np.ndarray, yte: np.ndarray, te_order: np.ndarray, gte_axes: list,
-    alpha: float = 0.10, gamma: float = 0.05, precomp=None,
+    alpha: float = 0.10, gamma: float = 0.05, precomp=None, *, learner=None,
 ) -> Intervals:
     """P7 (HEADLINE) — *cross-axis MAX* alpha-space group adaptation. Identical to
     `cqr_conditional_gqaci` EXCEPT the per-point effective level combines the three axes'
@@ -537,7 +601,7 @@ def cqr_conditional_gqaci_max(
     update of each b[k,l] is unchanged (toward the session marginal); only the COMBINATION
     differs, isolating the cancellation hypothesis. y_t revealed after the interval -> PIT."""
     if precomp is None:
-        precomp = _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha)
+        precomp = _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha, learner)
     pred, lo_q, hi_q, T = precomp
     yte, te_order = np.asarray(yte, float), np.asarray(te_order)
     gte_axes = [np.asarray(g).astype(str) for g in gte_axes]
@@ -576,7 +640,7 @@ def cqr_conditional_gqaci_asym(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray, gcal_axes: list,
     Xte: np.ndarray, yte: np.ndarray, te_order: np.ndarray, gte_axes: list,
-    alpha: float = 0.10, gamma: float = 0.05, rho: float = 0.5, precomp=None,
+    alpha: float = 0.10, gamma: float = 0.05, rho: float = 0.5, precomp=None, *, learner=None,
 ) -> Intervals:
     """P7 (secondary) — *asymmetric-rate* alpha-space group adaptation. Identical to
     `cqr_conditional_gqaci` (ADDITIVE combination unchanged) EXCEPT the per-group level
@@ -588,7 +652,7 @@ def cqr_conditional_gqaci_asym(
     whether reluctance-to-tighten alone recovers the group term's value. y_t revealed after
     the interval -> PIT-valid."""
     if precomp is None:
-        precomp = _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha)
+        precomp = _alpha_precompute(Xtr, ytr, Xcal, ycal, gcal_axes, Xte, gte_axes, alpha, learner)
     pred, lo_q, hi_q, T = precomp
     yte, te_order = np.asarray(yte, float), np.asarray(te_order)
     gte_axes = [np.asarray(g).astype(str) for g in gte_axes]
@@ -653,14 +717,14 @@ def localized_cqr(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray,
     Xte: np.ndarray, alpha: float = 0.10,
-    subsample: int = _LOCAL_SUBSAMPLE,
+    subsample: int = _LOCAL_SUBSAMPLE, *, learner=None,
 ) -> Intervals:
     """P10 — localized (kernel-conditional) CQR. Per-test-point conformal radius Q(x) =
     kernel-weighted (1-alpha) quantile of the CQR conformity scores E, Gaussian kernel on
     z-scored features. Continuous conditional coverage; the P10 comparator to Mondrian's
     discrete groups. Static (calibration-based), like Mondrian — the conditioning-axis
     reference, not a shift method."""
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     Xc, Xt = np.asarray(Xcal, float), np.asarray(Xte, float)
     mu, sd = Xc.mean(0), Xc.std(0)
     sd[sd == 0] = 1.0
@@ -697,7 +761,7 @@ def localized_cqr(
 def weighted_cqr(
     Xtr: np.ndarray, ytr: np.ndarray,
     Xcal: np.ndarray, ycal: np.ndarray,
-    Xte: np.ndarray, alpha: float = 0.10,
+    Xte: np.ndarray, alpha: float = 0.10, *, learner=None,
 ) -> Intervals:
     """#5 (ablation) — covariate-shift weighted CQR (Tibshirani et al. 2019). A
     classifier separates calib (0) vs test (1) covariates; calib points are reweighted
@@ -705,9 +769,9 @@ def weighted_cqr(
     empirical quantile (test atom approximated at the mean test weight). One shared Q."""
     from lightgbm import LGBMClassifier
 
-    from learners import PARAMS  # reuse frozen GBM config
+    from .learners import PARAMS  # reuse frozen GBM config
 
-    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha)
+    pred, lo_q, hi_q, E = _cqr_pieces(Xtr, ytr, Xcal, ycal, Xte, alpha, learner)
     clf = LGBMClassifier(**{k: v for k, v in PARAMS.items() if k != "subsample_freq"})
     Z = np.vstack([Xcal, Xte])
     yz = np.r_[np.zeros(len(Xcal)), np.ones(len(Xte))]
