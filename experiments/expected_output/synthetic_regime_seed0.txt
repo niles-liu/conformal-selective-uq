@@ -1,0 +1,7 @@
+=== Layer 1b MULTI-REGIME synthetic allocator (P12) ===
+  seed=0 | 151,658 rows | 93 names | 1634 sessions
+  regime sessions: calm 525, normal 565, stress 544 | mean dwell 28.2 | switches 57
+  overlay amp per state: {'calm': 0.6, 'normal': 1.0, 'stress': 2.4}
+  disp_lag by true regime (detector separation): calm 2.117, normal 2.471, stress 4.299
+  ceiling R^2 (y ~ recoverable_term): 0.189  (target ~0.40)
+  wrote synth_1b_seed0.parquet

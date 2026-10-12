@@ -1,0 +1,42 @@
+================================================================================================
+P7 — cross-axis MAX vs additive vs global, alpha-space group adaptation | Layer 1a
+================================================================================================
+  [progress] seed 0 done @ <t>s (1/3 seeds)
+  [progress] seed 1 done @ <t>s (2/3 seeds)
+  [progress] seed 2 done @ <t>s (3/3 seeds)
+
+Coverage (mean +/- sd over seeds [0, 1, 2]; target 90%)
+method                         base          shift    worst-grp|shift    width
+ACI multi-axis         0.934+/-0.001   0.915+/-0.010    0.881+/-0.021    9.076  (sector=utilities)
+cqr_conditional        0.898+/-0.015   0.564+/-0.073    0.433+/-0.070    6.178  (mom_decile=0.0)
+cond+qACI              0.904+/-0.000   0.797+/-0.052    0.683+/-0.071    7.605  (sector=tech)
+cond+gqACI             0.900+/-0.003   0.679+/-0.077    0.655+/-0.075    6.715  (mom_decile=0.0)
+cond+gqACI-max         0.905+/-0.001   0.770+/-0.067    0.687+/-0.073    7.401  (sector=tech)
+cond+gqACI-asym        0.911+/-0.001   0.783+/-0.064    0.695+/-0.082    7.581  (sector=tech)
+
+[G-GROUP-HELPS] cond+gqACI-max worst-grp|shift 0.687 > global cond+qACI 0.683 AND > additive cond+gqACI 0.655? -> PASS
+  per-seed worst-grp: max [0.619 0.655 0.789] vs global [0.618 0.649 0.782] (max-global [0.    0.006 0.006])
+[G-BASE-CALIB] cond+gqACI-max base 0.905 within +/-0.05 of 0.9? -> PASS
+[G-EFFICIENCY] width cond+gqACI-max 7.401 < union 9.076? -> PASS
+[G-SHIFT-COND report] cond+gqACI-max worst-grp|shift 0.687 (floor 0.704) & shift 0.770 (+/-0.07) -> MISS
+
+[G-CALIB-MULTI report] cond+gqACI-max per-axis SIGNED worst gap (mean over seeds; +/-tau=0.05)
+axis              FULL base     retained-70%
+sector           +0.029   OK       +0.072 over
+cap_tier         +0.007   OK       +0.039   OK
+mom_decile       +0.019   OK       +0.046   OK
+
+[seed0 clustered band] cond+gqACI-max BASE coverage 0.905 [0.899,0.909]
+
+==> P7 verdict (1a): QUALIFIED/REJECT  (G-GROUP-HELPS pass, G-BASE-CALIB pass, G-EFFICIENCY pass, G-SHIFT-COND miss; direction SHIPS (direction))
+
+================================================================================================
+P7 — cross-axis level combination | Layer 1b (real 21d fwd return)
+================================================================================================
+method                   base    shift        worst-grp|shift    width
+  ACI multi-axis        0.933    0.934      0.896 (sector=materials)     0.306
+  cqr_conditional       0.870    0.799      0.706 (sector=industrials)     0.247
+  cond+qACI             0.898    0.888      0.819 (sector=financials)     0.283
+  cond+gqACI            0.860    0.850      0.823 (sector=materials)     0.249
+  cond+gqACI-max        0.899    0.896      0.860 (sector=materials)     0.281
+  cond+gqACI-asym       0.902    0.911      0.869 (sector=materials)     0.283

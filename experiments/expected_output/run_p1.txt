@@ -1,0 +1,49 @@
+==========================================================================
+LAYER 1a — known-ceiling synthetic | baseline read
+==========================================================================
+
+[naive]  (mean +/- sd over seeds [0, 1, 2]; target 90%)
+  marginal coverage    : 0.794 +/- 0.026
+  coverage | base reg  : 0.902 +/- 0.010
+  coverage | SHIFT reg : 0.580 +/- 0.060   <-- conditional failure
+  WORST-GROUP | shift  : 0.507 +/- 0.058  (e.g. sector=utilities)
+  mean interval width  : 6.249 +/- 0.114
+  [seed0 clustered band] marginal 0.773 [0.758,0.789] | shift 0.541 [0.518,0.561]
+
+[cqr]  (mean +/- sd over seeds [0, 1, 2]; target 90%)
+  marginal coverage    : 0.791 +/- 0.033
+  coverage | base reg  : 0.901 +/- 0.015
+  coverage | SHIFT reg : 0.573 +/- 0.071   <-- conditional failure
+  WORST-GROUP | shift  : 0.474 +/- 0.078  (e.g. mom_decile=0.0)
+  mean interval width  : 6.238 +/- 0.224
+  [seed0 clustered band] marginal 0.762 [0.745,0.778] | shift 0.522 [0.499,0.542]
+
+[risk-coverage] retained MAE @ retention 70% (mean over seeds):
+  full (no abstention) : 2.0297
+  random abstention    : 2.0290
+  CQR-width abstention : 2.0440  (proto-method, informative)
+  ORACLE abstention    : 1.7914  (knows irreducible_sigma)
+  full risk-coverage curve (oracle):
+     ret 30%: random 2.0284 | oracle 1.4904 | width 2.1343
+     ret 40%: random 2.0292 | oracle 1.5598 | width 2.0956
+     ret 50%: random 2.0292 | oracle 1.6360 | width 2.0700
+     ret 60%: random 2.0291 | oracle 1.7189 | width 2.0556
+     ret 70%: random 2.0290 | oracle 1.7914 | width 2.0440
+     ret 80%: random 2.0295 | oracle 1.8715 | width 2.0339
+     ret 90%: random 2.0298 | oracle 1.9450 | width 2.0312
+     ret 100%: random 2.0297 | oracle 2.0297 | width 2.0297
+
+--------------------------------------------------------------------------
+FROZEN MARGINS (from method-blind baseline-only read):
+  X (retention)            : 70%  (a priori)
+  Delta (G-PRIMARY i)      : 0.1188  = 0.5*(random 2.0290 - oracle 1.7914) @ 70%
+  G-SHIFT naive worst-group: 0.507  -> failure gap 0.393; method must close >=50% (to a gap <= 0.196, i.e. worst-group >= 0.704)
+--------------------------------------------------------------------------
+
+==========================================================================
+LAYER 1b — real public task (21d fwd return) | baseline read
+==========================================================================
+
+[naive]  marginal 0.884 | base 0.902 | SHIFT 0.850 | worst-grp(shift) 0.734 (mom_decile=0.0) | width 0.281
+
+[cqr]  marginal 0.860 | base 0.884 | SHIFT 0.814 | worst-grp(shift) 0.775 (sector=industrials) | width 0.248

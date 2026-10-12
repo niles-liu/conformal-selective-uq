@@ -1,0 +1,27 @@
+============================================================================================
+P10 — localized (kernel-conditional) vs discrete-group comparators | Layer 1a
+============================================================================================
+  [progress] seed 0 done @ <t>s
+  [progress] seed 1 done @ <t>s
+  [progress] seed 2 done @ <t>s
+
+Coverage (mean+/-sd over [0, 1, 2]; target 90%)
+method                      base         shift   worst-grp|shift  base worst-grp    width
+naive               0.902+/-0.010  0.580+/-0.060     0.507+/-0.058           0.855    6.249
+cqr                 0.901+/-0.015  0.573+/-0.071     0.474+/-0.078           0.853    6.238
+mondrian            0.900+/-0.016  0.572+/-0.072     0.462+/-0.113           0.845    6.235
+cqr_conditional     0.898+/-0.015  0.564+/-0.073     0.433+/-0.070           0.829    6.178
+localized           0.898+/-0.018  0.570+/-0.075     0.491+/-0.066           0.852    6.191
+
+[G-LOCAL-VALID] localized base coverage 0.898 within +/-0.05 of 0.9? -> PASS
+[G-LOCAL-TIGHTER] localized base worst-grp 0.852 vs mondrian 0.845 (comparable +/-0.05: True); width 6.191 < mondrian 6.235? -> PASS
+
+============================================================================================
+P10 — localized comparator | Layer 1b (real 21d fwd return)
+============================================================================================
+method                base   shift     worst-grp|shift  base worst-grp    width
+naive                0.902   0.850       0.734 (mom_deci)      0.817    0.281
+cqr                  0.884   0.814       0.775 (sector)      0.853    0.248
+mondrian             0.883   0.813       0.773 (sector)      0.846    0.248
+cqr_conditional      0.870   0.799       0.706 (sector)      0.762    0.247
+localized            0.882   0.818       0.776 (sector)      0.851    0.250

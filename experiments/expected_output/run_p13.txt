@@ -1,0 +1,35 @@
+============================================================================================
+P13: SELECTION-AWARE CALIBRATION FOR THE KEPT SET (Layer 1a, seeds [0, 1, 2])
+============================================================================================
+[seed 0] kept-base coverage: V0 0.916  V1 0.862  V2all 0.916  V2 0.869  V3 0.860  V2-ACI 0.901
+[seed 1] kept-base coverage: V0 0.928  V1 0.865  V2all 0.934  V2 0.891  V3 0.866  V2-ACI 0.904
+[seed 2] kept-base coverage: V0 0.939  V1 0.900  V2all 0.943  V2 0.927  V3 0.926  V2-ACI 0.904
+
+Kept set = lowest-score 70% of test rows (P2's rule). Target 90%. Mean +/- sd over seeds.
+variant                                  cov base  width base      cov shift  n base  n calib
+V0 u_cal, calib all (P2)             0.928+/-0.009      6.265    0.607+/-0.073  33132    23436
+V1 u_cal, calib kept                 0.876+/-0.017      5.173    0.514+/-0.079  33132    16632
+V2all u_train, calib all             0.931+/-0.011      6.250    0.606+/-0.069  33132    23436
+V2 u_train, calib kept (PROPOSED)    0.896+/-0.024      5.489    0.541+/-0.088  33132    16632
+V3 u_half, calib kept H2             0.884+/-0.030      5.398    0.535+/-0.101  33132     8448
+V2-ACI u_train, online kept          0.903+/-0.001      5.563    0.835+/-0.036  33132    16632
+
+[seed0 clustered band] V2 kept-base coverage 0.869 [0.860,0.876]
+worst-group |gap| on kept base rows, V0: per seed [0.069 0.071 0.077]  mean 0.072
+worst-group |gap| on kept base rows, V2: per seed [0.119 0.073 0.063]  mean 0.085
+score u_cal    AUC 0.813+/-0.034 | retained-MAE reduction vs random @70% 0.1775 (per seed [0.1968 0.1739 0.1618])
+score u_train  AUC 0.845+/-0.044 | retained-MAE reduction vs random @70% 0.1895 (per seed [0.2158 0.1821 0.1704])
+score u_half   AUC 0.785+/-0.046 | retained-MAE reduction vs random @70% 0.1716 (per seed [0.1933 0.1493 0.1723])
+kept-set agreement u_cal vs u_train (share of test rows with the same keep/drop call): 0.792
+
+--------------------------------------------------------------------------------------------
+PRE-COMMITTED GATES (reports/p13_selection_aware_preregistration.md)
+[G-VALID]  V2 kept-base coverage 0.896, within +/-0.02 of 0.9? (0.004 off) -> PASS
+[G-TIGHT]  V2 width / V2all width = 0.878 <= 0.95 -> PASS (V2all coverage 0.931)
+[G-MECH]   u_train AUC 0.845 >= 0.7 and reduction 0.1895 >= 0.119 -> PASS
+[G-CAVEAT] (report) V0 kept-base coverage 0.928: +0.028 from nominal
+[G-REUSE]  (report) V1 - V2 kept-base coverage = -0.020 (V1 0.876)
+[G-SPLIT]  (report) V3 coverage 0.884, width 5.398 vs V2 width 5.489
+[G-SHIFT]  (report) kept shift coverage: V2 0.541, V2-ACI 0.835
+
+VERDICT -> CONFIRM: a selection-aware score plus calibration on the kept stocks gives nominal kept-set coverage, narrower intervals than calibrating on every stock, and still finds the unrecoverable stocks.

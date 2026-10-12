@@ -1,0 +1,44 @@
+[seed 0] load + learn regime ...
+[seed 0] lam=10.0 stress_share=0.43; unioning axes ...
+[seed 0] done (bal-acc 0.510)
+[seed 1] load + learn regime ...
+[seed 1] lam=10.0 stress_share=0.20; unioning axes ...
+[seed 1] done (bal-acc 0.514)
+[seed 2] load + learn regime ...
+[seed 2] lam=10.0 stress_share=0.76; unioning axes ...
+[seed 2] done (bal-acc 0.480)
+==========================================================================================
+P12 — LEARNED REGIME AXIS (regime × conformal), UNION remedy, multi-regime substrate
+==========================================================================================
+seeds [0, 1, 2] | test>= 20220101 | target 90% | lambda [10.0, 10.0, 10.0] | eval on TRUE regime, trigger on LEARNED
+
+variant                              marg  worst-regime  worst-grp   width  per-regime[calm/norm/stress]
+naive (marginal floor)              0.861    0.724+/-0.097      0.833  11.857  [0.949/0.931/0.724]
+static union (Camp B, regime-blind)  0.933    0.902+/-0.008      0.919  14.199  [0.953/0.946/0.902]
+regime-only ACI (Camp A)            0.898    0.846+/-0.023      0.866  13.277  [0.926/0.924/0.846]
+PROPOSED union +learned regime      0.939    0.909+/-0.003      0.924  14.652  [0.959/0.950/0.909]
+oracle union +true regime           0.947    0.938+/-0.010      0.933  14.922  [0.955/0.947/0.938]
+threshold union (ablation)          0.941    0.915+/-0.006      0.927  14.669  [0.955/0.957/0.915]
+CALIB static (tight, Camp B)        0.853    0.722+/-0.098      0.795  11.818  [0.937/0.922/0.722]
+CALIB +learned regime               0.861    0.790+/-0.099      0.809  13.612  [0.872/0.919/0.807]
+CALIB +true regime                  0.852    0.790+/-0.032      0.784  13.307  [0.829/0.809/0.918]
+
+[seed0 clustered band] proposed worst-regime (state 2) 0.905 [0.895,0.913]
+regime recovery (balanced acc vs true, test): 0.501 per-seed [0.51  0.514 0.48 ]
+G-NULL shuffled-regime worst-regime: 0.909 (vs static 0.902)
+
+------------------------------------------------------------------------------------------
+PRE-COMMITTED GATES
+[G-SEAM]       proposed wr 0.909 - static wr 0.902 = +0.007 >= +0.03 -> MISS
+[G-NOMINAL]    proposed wr 0.909 >= 0.85                 -> PASS
+[G-WORSTGROUP] proposed wg 0.924 >= static wg 0.919 - 0.02 -> PASS
+[G-EFF]        proposed width 14.652 <= 1.1x static 14.199 -> PASS
+[G-RECOVER]    regime bal-acc 0.501 >= 0.7          -> MISS
+[G-NULL]       shuffled wr 0.909 <= static+.02          -> PASS (collapses)
+  (context: oracle-regime wr 0.938 = identifiability upper bound)
+
+[CALIBRATED family — tight remedy] seam test on the calibrated node
+  cal_static wr 0.722 (marg 0.853 w 11.82) | cal+learned wr 0.790 (+0.068) | cal+true(oracle) wr 0.790 (+0.068)
+  [G-SEAM-CALIB] cal+learned - cal_static = +0.068 (>= +0.03? PASS); oracle headroom +0.068
+
+VERDICT -> REJECT-as-finding: even with a learnable regime, the static union already covers every regime (its cross-axis conservatism absorbs the regime effect) — the regime axis adds nothing.

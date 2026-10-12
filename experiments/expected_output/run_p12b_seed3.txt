@@ -1,0 +1,3 @@
+[seed 3] calibrated done (lam=10.0, bal-acc=0.499)
+[seed 3] POGO + tuned gqaci_max done
+[seed 3] wrote p12b_seed3.json (band state 2: 0.747 [0.721,0.772])

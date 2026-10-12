@@ -1,0 +1,36 @@
+==========================================================================================
+P2.3 — single / union / conditional / +global / +GROUP-ADAPTIVE | Layer 1a (known floor)
+==========================================================================================
+
+Coverage (mean +/- sd over seeds [0, 1, 2]; target 90%)
+method                       base          shift    worst-grp|shift    width
+ACI single-axis      0.904+/-0.001   0.867+/-0.015    0.815+/-0.029    8.093  (sector=utilities)
+ACI multi-axis       0.934+/-0.001   0.915+/-0.010    0.881+/-0.021    9.076  (sector=utilities)
+cqr_conditional      0.898+/-0.015   0.564+/-0.073    0.433+/-0.070    6.178  (mom_decile=0.0)
+cond+ACI             0.965+/-0.008   0.702+/-0.057    0.599+/-0.071    8.376  (mom_decile=0.0)
+cond+gACI            0.966+/-0.009   0.704+/-0.057    0.651+/-0.071    8.348  (sector=materials)
+
+[G-SHIFT-COND] cond+gACI worst-grp|shift 0.651 (floor 0.704; static 0.433, global-hybrid 0.599) & shift 0.704 (+/-0.07) -> MISS
+[G-EFFICIENCY] width cond+gACI 8.348 < union 9.076? -> PASS
+[G-BASE-CALIB] base 0.966 within +/-0.05 of 0.9? -> MISS
+
+[G-CALIB-MULTI report] per-axis SIGNED worst gap (mean over seeds; +/-tau=0.05)
+axis          FULL base (cond+gACI)   retained-70% (cond+gACI)
+sector                   +0.079 over               +0.095 over
+cap_tier                 +0.069 over               +0.080 over
+mom_decile               +0.074 over               +0.085 over
+  (retained-set sector residual = the P2.2 selective x conditional interaction; pre-committed as reported, NOT a P2.3 ship-blocker)
+
+[seed0 clustered band] cond+gACI BASE coverage 0.968 [0.965,0.971]
+
+==> P2.3 verdict (1a): QUALIFIED/REJECT  (G-SHIFT-COND miss, G-EFFICIENCY pass, G-BASE-CALIB miss)
+
+==========================================================================================
+P2.3 — group-adaptive conditional | Layer 1b (real 21d fwd return)
+==========================================================================================
+method                 base    shift        worst-grp|shift    width
+  ACI single-axis     0.898    0.898      0.858 (sector=materials)     0.275
+  ACI multi-axis      0.933    0.934      0.896 (sector=materials)     0.306
+  cqr_conditional     0.870    0.799      0.706 (sector=industrials)     0.247
+  cond+ACI            0.906    0.829      0.740 (sector=industrials)     0.269
+  cond+gACI           0.910    0.832      0.766 (sector=industrials)     0.268

@@ -1,0 +1,45 @@
+====================================================================================
+P2.2 — single / union / CONDITIONAL ACI | Layer 1a (known-floor synthetic)
+====================================================================================
+
+Coverage (mean +/- sd over seeds [0, 1, 2]; target 90%)
+method                       base          shift    worst-grp|shift    width
+ACI single-axis      0.904+/-0.001   0.867+/-0.015    0.815+/-0.029    8.093  (sector=utilities)
+ACI multi-axis       0.934+/-0.001   0.915+/-0.010    0.881+/-0.021    9.076  (sector=utilities)
+cqr_conditional      0.898+/-0.015   0.564+/-0.073    0.433+/-0.070    6.178  (mom_decile=0.0)
+cond+ACI             0.965+/-0.008   0.702+/-0.057    0.599+/-0.071    8.376  (mom_decile=0.0)
+
+[G-CALIB-MULTI] retained-70% BASE conditional coverage, SIGNED worst gap (mean over seeds; +/-tau=0.05)
+axis           union (P2.1)    conditional  verdict(cond, two-sided)
+sector               +0.083         +0.078  MISS
+cap_tier             +0.063         +0.030  OK
+mom_decile           +0.067         -0.036  OK
+marginal base cov (conditional) 0.898 within +/-0.05? OK
+-> G-CALIB-MULTI MISS  (all axes two-sided +/-tau AND marginal not over-covering)
+
+[diagnostic, not a gate] FULL base set (no abstention), SIGNED worst gap (mean over seeds; +/-tau=0.05)
+axis           union (P2.1)    conditional    single-axis  cond within +/-tau?
+sector               +0.060         -0.025         +0.028  OK
+cap_tier             +0.042         -0.008         +0.007  OK
+mom_decile           +0.047         -0.048         +0.007  OK
+
+[G-EFFICIENCY] width conditional 6.178 < union 9.076? -> PASS  (vs single-axis 8.093)
+
+[G-SHIFT report] worst-grp|shift (floor 0.704); shift cov within +/-0.07
+  ACI single-axis    worst-grp 0.815 (ok-floor) shift 0.867
+  ACI multi-axis     worst-grp 0.881 (ok-floor) shift 0.915
+  cqr_conditional    worst-grp 0.433 (under-floor) shift 0.564
+  cond+ACI           worst-grp 0.599 (under-floor) shift 0.702
+
+[seed0 clustered band] conditional BASE coverage 0.881 [0.874,0.888]
+
+==> P2.2 verdict (1a): QUALIFIED/REJECT  (G-CALIB-MULTI miss, G-EFFICIENCY pass)
+
+====================================================================================
+P2.2 — conditional conformal | Layer 1b (real 21d fwd return)
+====================================================================================
+method                 base    shift        worst-grp|shift    width
+  ACI single-axis     0.898    0.898      0.858 (sector=materials)     0.275
+  ACI multi-axis      0.933    0.934      0.896 (sector=materials)     0.306
+  cqr_conditional     0.870    0.799      0.706 (sector=industrials)     0.247
+  cond+ACI            0.906    0.829      0.740 (sector=industrials)     0.269

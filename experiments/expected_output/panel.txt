@@ -1,0 +1,14 @@
+universe+proxies: 101 tickers | 3 chunks
+  chunk 1/3: 40/40 tickers
+  chunk 2/3: 40/40 tickers
+  chunk 3/3: 21/21 tickers
+  wrote public_prices_raw.parquet (177,557 bars), public_returns.parquet
+=== panel ===
+  151,658 rows | 93 names | 1634 sessions (20180705..20241231)
+  16 features: ['mom_21', 'mom_63', 'mom_126', 'mom_252', 'resid_mom_21', 'sys_mom_21', 'resid_mom_63', 'sys_mom_63', 'vol_21', 'vol_63', 'beta_mkt', 'beta_qqq', 'beta_mtum', 'beta_iwm', 'dist_252hi', 'log_dollar_vol']
+  groups: 11 sectors, cap_tier, mom_decile
+  wrote public_pit_panel.parquet
+=== data manifest ===
+  prices          matches the published data (177,557 rows)
+  returns         matches the published data (177,456 rows)
+  panel           matches the published data (151,658 rows)

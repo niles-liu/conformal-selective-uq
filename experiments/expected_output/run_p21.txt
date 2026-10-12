@@ -1,0 +1,25 @@
+==============================================================================
+P2.1 — single-axis vs MULTI-axis ACI | Layer 1a (known-floor synthetic)
+==============================================================================
+
+Coverage (mean +/- sd over seeds [0, 1, 2]; target 90%)
+method                     base          shift    worst-grp|shift    width
+ACI single-axis    0.904+/-0.001   0.867+/-0.015    0.815+/-0.029    8.093  (sector=utilities)
+ACI multi-axis     0.934+/-0.001   0.915+/-0.010    0.881+/-0.021    9.076  (sector=utilities)
+
+[G-COND-MULTI] retained-70% conditional coverage, max|gap| (mean over seeds)
+axis            single-axis     multi-axis  verdict(multi vs tau=0.05)
+sector                0.060          0.077  MISS
+cap_tier              0.034          0.057  MISS
+mom_decile            0.032          0.059  MISS
+
+[G-SHIFT re-confirm] multi worst-grp|shift 0.881 (>= single 0.815 and >= 0.704); shift cov 0.915 (+/-0.07) -> PASS
+[seed0 clustered band] multi-axis ACI shift coverage 0.908 [0.897,0.918]
+
+==> P2.1 verdict (1a): QUALIFIED/REJECT  (G-COND-MULTI miss, G-SHIFT pass)
+
+==============================================================================
+P2.1 — multi-axis ACI | Layer 1b (real 21d fwd return)
+==============================================================================
+  ACI single-axis base 0.898 shift 0.898 worst-grp|shift 0.858 (sector=materials) width 0.275
+  ACI multi-axis  base 0.933 shift 0.934 worst-grp|shift 0.896 (sector=materials) width 0.306

@@ -1,0 +1,11 @@
+============================================================================================
+P8 baseline read (method-blind) | Layer 1a | product-region joint coverage failure
+============================================================================================
+
+INDEPENDENT-scalar product region — JOINT coverage (all names in at once):
+  base  0.0000 +/- 0.0000   shift 0.0000 +/- 0.0000   (target 0.90)
+  -> the multiplicity failure: 93 marginal-90% intervals => joint ~0.
+
+Compositional score 90th-pct on calib (radius scale): Aitchison 17.828, TV 0.7572
+
+(Gate thresholds reuse frozen tolerances: tau=0.05, tau_shift=0.07, theta_AUC=0.70, theta_rho=0.40)

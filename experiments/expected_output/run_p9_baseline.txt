@@ -1,0 +1,24 @@
+============================================================================================
+P9 baseline read (method-blind) | Layer 1a | retention r=70%, target coverage 90%
+============================================================================================
+
+Frozen scale  W0 (median base width) = 6.295 +/- 0.182
+
+pool                      cov|base   cov|shift   risk|base  risk|shift     width
+full (no select)             0.901       0.573       0.015       0.155         -
+retained (u, global)         0.928       0.607       0.010       0.132     6.218
+retained (random)            0.901       0.573       0.015       0.155     6.238
+
+(risk = mean capped miss-magnitude in [0,1]; target to be frozen from these numbers)
+============================================================================================
+P9 baseline read (method-blind) | Layer 1b | retention r=70%, target coverage 90%
+============================================================================================
+
+Frozen scale  W0 (median base width) = 0.228 +/- 0.000
+
+pool                      cov|base   cov|shift   risk|base  risk|shift     width
+full (no select)             0.884       0.814       0.020       0.045         -
+retained (u, global)         0.894       0.825       0.015       0.038     0.232
+retained (random)            0.884       0.814       0.020       0.045     0.248
+
+(risk = mean capped miss-magnitude in [0,1]; target to be frozen from these numbers)

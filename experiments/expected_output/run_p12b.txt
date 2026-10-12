@@ -1,0 +1,42 @@
+============================================================================================
+P12b — CONFIRMATORY calibrated-node regime seam (held-out {3,4,5}) + POGO parameter-free arm
+============================================================================================
+
+############################################################################################
+# CONFIRMATION SET — held-out seeds [3, 4, 5] (these decide the gates) | target 90% | eval TRUE regime, trigger LEARNED
+############################################################################################
+
+variant                          marg  worst-regime  worst-grp   width  per-regime[calm/norm/stress]
+cal_static (tight, regime-blind)  0.872    0.761+/-0.012      0.797  12.507  [0.943/0.958/0.761]
+cal +learned regime             0.887    0.817+/-0.061      0.814  13.587  [0.924/0.927/0.817]
+cal +true regime (oracle)       0.883    0.813+/-0.034      0.803  12.842  [0.864/0.887/0.884]
+cal +SHUFFLED (G-NULL)          0.873    0.759+/-0.109      0.809  13.587  [0.941/0.943/0.759]
+POGO static (param-free)        0.912    0.818+/-0.017      0.895  13.694  [0.974/0.972/0.818]
+POGO +learned (param-free)      0.907    0.855+/-0.024      0.880  14.193  [0.933/0.938/0.855]
+gqaci_max +learned (tuned g)    0.897    0.864+/-0.013      0.848  13.228  [0.924/0.909/0.864]
+regime recovery (balanced acc vs true): 0.441 per-seed [0.499 0.465 0.359]
+[seed3 clustered band] cal_proposed worst-regime (state 2) 0.747 [0.721,0.772]
+[seed4 clustered band] cal_proposed worst-regime (state 2) 0.810 [0.786,0.830]
+[seed5 clustered band] cal_proposed worst-regime (state 2) 0.894 [0.883,0.906]
+
+--------------------------------------------------------------------------------------------
+# EXPLORATORY SET — P12 seeds [0, 1, 2] (report-only, do NOT decide gates)
+
+variant                          marg  worst-regime  worst-grp   width  per-regime[calm/norm/stress]
+cal_static (tight, regime-blind)  0.853    0.722+/-0.098      0.795  11.818  [0.937/0.922/0.722]
+cal +learned regime             0.861    0.790+/-0.099      0.809  13.612  [0.872/0.919/0.807]
+cal +true regime (oracle)       0.852    0.790+/-0.032      0.784  13.307  [0.829/0.809/0.918]
+cal +SHUFFLED (G-NULL)          0.860    0.765+/-0.092      0.815  13.612  [0.914/0.922/0.765]
+
+============================================================================================
+PRE-COMMITTED GATES (decided on held-out {3,4,5})
+============================================================================================
+[G-SEAM-CALIB]     cal_proposed wr 0.817 - cal_static wr 0.761 = +0.055 >= +0.03  -> PASS
+[G-NULL-CALIB]     cal_shuffled wr 0.759 - cal_static = -0.003 < +0.03 (regime-specific?) -> PASS
+[G-ORACLE-CAPTURE] seam +0.055 / oracle +0.052 = 1.07 >= 0.6 -> PASS
+[G-EFF-CALIB]      width ratio 1.086 <= 1.2x  -> PASS
+[G-POGO-SEAM]      pogo_proposed wr 0.855 - pogo_static 0.818 = +0.037 >= +0.03  -> PASS
+[G-POGO-MATCH]     |pogo 0.855 - tuned gqaci_max 0.864| = 0.008 <= 0.03  -> PASS
+
+VERDICT (primary) -> CONFIRM: on the TIGHT calibrated (Gibbs-Cherian-Candes) node, a learned dynamic regime axis recovers worst-regime coverage the regime-blind node misses; the lift is regime-specific (shuffled placebo does not reproduce it), captures the true-regime oracle headroom, and is a reallocation (not blanket widening) — confirmed out-of-sample on fresh seeds. The seam lives on the tight node, not the self-absorbing union (the P12 boundary).
+POGO (secondary): seam PASS, parameter-free-matches-tuned PASS -> corroborates

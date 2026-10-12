@@ -1,0 +1,59 @@
+==========================================================================
+LAYER 1a — known-ceiling synthetic | METHOD (P2)
+==========================================================================
+
+Coverage (mean +/- sd over seeds [0, 1, 2]; target 90%)
+method               base          shift    worst-grp|shift
+naive        0.902+/-0.010   0.580+/-0.060    0.507+/-0.058  (sector=utilities)
+cqr          0.901+/-0.015   0.573+/-0.071    0.474+/-0.078  (mom_decile=0.0)
+mondrian     0.900+/-0.016   0.572+/-0.072    0.462+/-0.113  (mom_decile=0.0)
+weighted     1.000+/-0.000   0.967+/-0.020    0.937+/-0.037  (sector=utilities)
+aci          0.904+/-0.001   0.867+/-0.015    0.815+/-0.029  (sector=utilities)
+
+[seed0 clustered band] ACI shift coverage 0.856 [0.842,0.868]
+
+[G-PRIMARY i] retained MAE @ 70%  (mean over seeds)
+  full 2.0297 | random 2.0290 | METHOD(u) 1.8515 | oracle 1.7914
+  reduction vs random = 0.1775  (gate Delta=0.119)  -> PASS
+  per-seed reductions [0.1968 0.1739 0.1618]  (min 0.1618)
+  risk-coverage curve (mean over seeds):
+    ret 30%: random 2.0284 | method 1.5341 | oracle 1.4904
+    ret 40%: random 2.0292 | method 1.6019 | oracle 1.5598
+    ret 50%: random 2.0292 | method 1.6856 | oracle 1.6360
+    ret 60%: random 2.0291 | method 1.7837 | oracle 1.7189
+    ret 70%: random 2.0290 | method 1.8515 | oracle 1.7914
+    ret 80%: random 2.0295 | method 1.9110 | oracle 1.8715
+    ret 90%: random 2.0298 | method 1.9654 | oracle 1.9450
+    ret 100%: random 2.0297 | method 2.0297 | oracle 2.0297
+
+[G-PRIMARY ii] per-group coverage on retained 70% (ACI, per seed)
+  sector: max |gap| over seeds [0.05  0.065 0.065]  mean 0.060
+  cap_tier: max |gap| over seeds [0.038 0.026 0.037]  mean 0.034
+  mom_decile: max |gap| over seeds [0.037 0.03  0.029]  mean 0.032
+  worst-dim |gap| per seed [0.05  0.065 0.065]  mean 0.060  (gate tau=0.05) -> FAIL
+  non-pre-registered reading: a MARGINAL band up to tau+0.01 = 0.06; mean 0.0601 -> FAIL
+
+[G-SHIFT] ACI worst-group|shift = 0.815: >= floor 0.704? yes; within +/-0.07 of 0.9? no (0.085 off) -> FAIL
+  non-pre-registered reading: band tested on overall shift coverage 0.867 instead of worst-group (within +/-0.07 of 0.9?) -> PASS
+
+[G-MECHANISM] AUC(-u -> recoverable) 0.813+/-0.034 (theta 0.7) | Spearman(u,sigma_irr) 0.856+/-0.044 (theta' 0.4)
+  confound: Spearman(u,sigma_irr | vol_63) 0.862+/-0.041  -> survives vol control? YES
+  -> PASS
+
+[G-NULL] shuffled-y selective advantage @ 70%: 0.0018+/-0.0026  (real 0.1775) -> PASS (collapses)
+
+==========================================================================
+LAYER 1b — real public task (21d fwd return) | METHOD (P2)
+==========================================================================
+method         base    shift        worst-grp|shift    width
+naive         0.902    0.850      0.734 (mom_decile=0.0)     0.281
+cqr           0.884    0.814      0.775 (sector=industrials)     0.248
+mondrian      0.883    0.813      0.773 (sector=industrials)     0.248
+weighted      1.000    0.998      0.989 (mom_decile=0.0)     0.849
+aci           0.898    0.898      0.858 (sector=materials)     0.275
+
+[G-SHIFT] ACI worst-group|shift = 0.858: >= floor 0.704? yes; within +/-0.07 of 0.9? yes (0.042 off) -> PASS
+  context, same rule on the static baseline: naive worst-group|shift = 0.734: >= floor 0.704? yes; within +/-0.07 of 0.9? no (0.166 off) -> FAIL
+
+[G-PRIMARY i] retained MAE @ 70%: random 0.0712 | method 0.0636 | reduction 0.0076
+[G-NULL] shuffled advantage 0.0004

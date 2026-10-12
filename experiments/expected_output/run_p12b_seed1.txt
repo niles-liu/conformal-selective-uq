@@ -1,0 +1,2 @@
+[seed 1] calibrated done (lam=10.0, bal-acc=0.514)
+[seed 1] wrote p12b_seed1.json (band state 2: 0.659 [0.640,0.680])

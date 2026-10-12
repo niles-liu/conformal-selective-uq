@@ -1,0 +1,22 @@
+============================================================================================
+P11 — e-value coverage-break monitor | Layer 1a (alpha=0.1, delta=0.05, threshold 20)
+============================================================================================
+
+seed 0:
+  naive / full stream                FIRES at session 17 (date 20220127, regime=shift) e-value 20.8 — in shift window
+  group-ACI / full stream            FIRES at session 129 (date 20220711, regime=shift) e-value 22.8 — in shift window
+  naive / BASE-ONLY (control)        FIRES at session 201 (date 20231020, regime=base) e-value 20.0 — OUTSIDE shift
+
+seed 1:
+  naive / full stream                FIRES at session 27 (date 20220210, regime=shift) e-value 22.2 — in shift window
+  group-ACI / full stream            FIRES at session 159 (date 20220822, regime=shift) e-value 20.2 — in shift window
+  naive / BASE-ONLY (control)        no alarm (max e-value 1.9 < 20)
+
+seed 2:
+  naive / full stream                FIRES at session 16 (date 20220126, regime=shift) e-value 20.3 — in shift window
+  group-ACI / full stream            no alarm (max e-value 4.5 < 20)
+  naive / BASE-ONLY (control)        no alarm (max e-value 1.3 < 20)
+
+--------------------------------------------------------------------------------------------
+[G-DETECT] naive fires in-shift 3/3 (median session 17); group-ACI fires 2/3 (median session 144) -> PASS (naive detected earlier)
+[G-NOFALSE] naive fires on base-only control 1/3 -> CHECK (false alarm; lam_cap frozen)

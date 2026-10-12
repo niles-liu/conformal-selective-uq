@@ -1,0 +1,35 @@
+============================================================================================
+P9 — SELECTIVE CONFORMAL RISK CONTROL (regression) | Layer 1a (gated)
+     retention r=70%, alpha_risk=0.05, tau_risk=0.03, eta=0.05*W0
+============================================================================================
+  [progress] seed 0 done @ <t>s
+  [progress] seed 1 done @ <t>s
+  [progress] seed 2 done @ <t>s
+
+Retained-pool RISK (capped miss-magnitude) & coverage; mean+/-sd over [0, 1, 2]
+method               risk|base      risk|shift    cov|base   cov|shift    width
+scrc             0.023+/-0.000   0.184+/-0.036       0.846       0.471    4.675
+scrc_aci         0.017+/-0.002   0.080+/-0.010       0.882       0.738    6.520
+full-fold CRC    0.023+/-0.000               -           -           -    4.675
+
+radius: scrc lambda_sel 0.000 (selected calib) vs full-fold 0.000; Qg 0.771
+
+[G-RISK-BASE] scrc retained base risk 0.023 <= 0.05? -> PASS
+[G-RISK-SHIFT] scrc_aci shift risk 0.080 <= 0.08 AND <= static scrc 0.184 - 0.03 (0.154)? -> PASS
+[G-NULL] selective risk advantage real 0.0108 vs shuffled 0.0002 (|null| < 0.5*|real|=0.0054)? -> PASS (collapses)
+[G-EFFICIENCY report] scrc width 4.675 (lambda_sel 0.000) < full-fold CRC 4.675 (lambda_full 0.000)? -> MISS
+[G-SELECT report] u-selection risk advantage over random 0.0108 > 0? -> PASS
+
+[seed0 clustered band] scrc base retained risk 0.022 [0.020,0.025]
+[mechanism] scrc_aci lambda path seed0: start 0.000, max 3.516, end 0.000 — adapts (rises under shift, relaxes after)
+
+==> P9 verdict (1a): FULL SHIP  (G-RISK-BASE pass, G-RISK-SHIFT pass, G-NULL pass)
+
+============================================================================================
+P9 — selective conformal risk control | Layer 1b (real 21d fwd return, external read)
+============================================================================================
+method           risk|base  risk|shift    cov|base   cov|shift    width
+scrc                 0.029       0.058       0.808       0.732    0.190
+scrc_aci             0.029       0.049       0.810       0.766    0.196
+full-fold CRC        0.029           -           -           -    0.190
+radius: lambda_sel 0.000 vs full-fold 0.000; Qg 0.021

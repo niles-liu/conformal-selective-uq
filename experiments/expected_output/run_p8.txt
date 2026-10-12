@@ -1,0 +1,22 @@
+============================================================================================
+P8 — JOINT conformal region on the SIMPLEX vs independent-scalar product region | 1a
+============================================================================================
+  [progress] seed 0 done @ <t>s
+  [progress] seed 1 done @ <t>s
+  [progress] seed 2 done @ <t>s
+
+JOINT coverage — the true allocation VECTOR in the region (mean+/-sd over [0, 1, 2])
+region                                  base           shift
+independent product (N scalars)    0.0000+/-0.0000    0.0000+/-0.0000
+simplex JOINT (Aitchison)        0.923+/-0.023     0.000+/-0.000
+simplex JOINT (TV companion)     0.904+/-0.008     0.230+/-0.076
+simplex ACI (Aitchison,online)     0.902+/-0.002     0.000+/-0.000
+
+[G-COMPO-JOINT] simplex base 0.923 within +/-0.05 of 0.9 AND product region 0.0000 << target? -> PASS
+[G-COMPO-SHIFT] simplex ACI shift 0.000 within +/-0.07 of 0.9 AND > static 0.000? -> MISS
+[G-COMPO-MECH] AUC(-difficulty->recoverable) 0.861 (theta 0.7); Spearman(difficulty,sigma_irr) 0.967 (theta' 0.4); partial|vol 0.967 -> PASS
+
+[seed0 month-blocked band] simplex base joint coverage 0.930 [0.892,0.964]
+
+==> P8 verdict (1a): QUALIFIED  (G-COMPO-JOINT pass, G-COMPO-SHIFT miss, G-COMPO-MECH pass)
+    (1b is forward returns, not compositional -> P8 has no real-data read here)
