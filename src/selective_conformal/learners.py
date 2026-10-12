@@ -27,6 +27,13 @@ PARAMS = dict(
     reg_lambda=1.0,
     n_jobs=-1,
     verbosity=-1,
+    # Repeatability. No seed is set, so LightGBM's sampling seeds keep their fixed defaults
+    # (bagging 3, feature fraction 2); passing random_state would change every published number.
+    # deterministic + force_row_wise stop LightGBM from picking its histogram method by timing
+    # both at startup. Every driver prints the same output with or without them, at 4 threads
+    # and at all cores; they cost about 20% in run time.
+    deterministic=True,
+    force_row_wise=True,
 )
 
 
