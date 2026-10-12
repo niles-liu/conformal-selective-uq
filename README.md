@@ -1,5 +1,7 @@
 # conformal-selective-uq
 
+[![CI](https://github.com/niles-liu/conformal-selective-uq/actions/workflows/ci.yml/badge.svg)](https://github.com/niles-liu/conformal-selective-uq/actions/workflows/ci.yml)
+
 A pre-registered study of selective conformal regression under distribution shift, on a testbed
 where each stock's unrecoverable noise is known. The abstention score finds the noisy stocks
 (AUC 0.81). Online conformal recovers most of the coverage a regime shift destroys (worst-group
@@ -7,7 +9,8 @@ coverage 0.51 to 0.82, target 0.90). Every check is reported exactly as it was f
 run, including the two that missed.
 
 Runs on a laptop with no API key: the headline experiment takes about 4 minutes from a fresh clone,
-and a toy-data quickstart about 3 seconds.
+a toy-data quickstart about 3 seconds, and `python reproduce.py` checks every printed number against
+the recorded output. The method installs as a small package with tests and CI.
 
 | Abstention against the known noise | Coverage under the shift |
 |:--:|:--:|
@@ -61,6 +64,21 @@ Further along the same line:
 - **Risk instead of coverage.** Online select-then-calibrate conformal risk control holds the kept
   stocks' capped miss-magnitude at the 0.08 target through the drawdown, where a static radius
   reaches 0.184 (P9). It passes its pre-registered rule at 0.0798, right on the threshold.
+- **Regimes that recur.** A second synthetic layer swaps the single shift for a three-state regime
+  (calm, normal, stress) whose spells last about 28 sessions. A learned regime axis (a Statistical Jump Model on
+  yesterday's cross-sectional dispersion, labelled causally) adds nothing to the conservative union,
+  which widens for stress on its own: +0.007, and a shuffled axis does as well (P12, a pre-registered
+  miss). On the tighter calibrated threshold it does help, and a confirm on three fresh seeds passes
+  all six of its gates: worst-regime coverage +0.055, matching a true-regime oracle (P12b). That lift
+  is noisy per seed (-0.022 to +0.150); a parameter-free online version lifts on every seed (+0.037)
+  and comes within 0.008 of the version with a hand-set step size.
+- **The kept-set caveat, tested.** P2 fits the abstention score and the conformal radius on the same
+  fold, so its coverage on the kept stocks has no guarantee, and on the calm test rows it over-covers
+  them (0.928).
+  Scoring stocks on cross-fitted training residuals instead, then calibrating on the kept stocks
+  only, gives 0.896 at 12% less width, and the score finds the noisy stocks slightly better (AUC
+  0.845). It passes its pre-registered checks on the three-seed mean but is noisy per seed (0.869 to
+  0.927); the online version on the same kept set holds 0.901 to 0.904 on every seed (P13).
 
 ## What didn't work, and what it taught
 
@@ -82,11 +100,17 @@ Further along the same line:
   anytime-valid e-value monitor flags the coverage break within about two weeks on every seed, but it
   also fires on the robust method and once on calm data, so it fails its pre-registered detection and
   false-alarm checks (P11).
-- **Coverage on the kept stocks is measured, not guaranteed.** The abstention score is fit on
-  calibration residuals, and the conformal layer calibrates on the same fold. A separate fold for the
-  score, or a selection-adjusted procedure, is the next experiment.
+- **One-shot calibration is noisy where online calibration is not.** Twice, a static calibrated fit
+  is right on average over seeds but swings from seed to seed (P12b's calibrated threshold, P13's
+  kept-set radius), while the online form of the same idea is stable on every seed.
 
 ## Use the method
+
+The method is a small package, `selective_conformal`:
+
+```
+pip install -e .
+```
 
 [`examples/quickstart.py`](examples/quickstart.py) runs in about 3 seconds on toy data, with no
 network: 30 units with their own noise levels, a noise jump partway through the test period, then
@@ -100,37 +124,53 @@ online ACI: coverage 0.88 before the shift, 0.81 after (worst tier 0.79; target 
 abstaining on the 30% least predictable rows: MAE 2.36 -> 1.89
 ```
 
-The functions live in `src/conformal.py` and `src/selective.py`. The conformal ones take NumPy
-arrays and the selective ones a small table of unit ids and residuals, so the same calls work on
-your own features, targets and groups.
+Each method fits LightGBM quantile models by default. To use your own model, pass any object with
+`fit_mean(X, y)` and `fit_quantile(X, y, level)` as `learner=`, or skip fitting entirely and hand
+the conformal step the quantile bands your model already produced:
+
+```python
+from selective_conformal import aci_from_quantiles
+
+# lo_*/hi_*: your model's 5% and 95% quantile predictions; g_*: group labels; t_te: time step
+lo, hi = aci_from_quantiles(lo_cal, hi_cal, y_cal, g_cal, lo_te, hi_te, y_te, t_te, g_te)
+```
+
+`cqr_from_quantiles` and `mondrian_from_quantiles` do the same for static split and group-wise
+calibration. With the default model's bands they reproduce `cqr`, `mondrian_cqr` and `aci_cqr`
+exactly, which the tests check.
 
 ## Reproduce
 
-Python 3.11 or later (tested on 3.12).
+Python 3.10 or later. CI runs the tests on 3.10, 3.12 and 3.13; the published numbers were produced
+on 3.12 with the versions in `requirements-lock.txt`.
 
 ```
-pip install -r requirements.txt   # or requirements-lock.txt for the exact tested versions
-python src/panel.py               # download public daily prices (Yahoo, via yfinance), build the panel
-python src/run_p1.py              # baselines
-python src/run_p2.py              # the headline experiment: three seeds, both layers
-python src/figures.py             # the three figures
+pip install -r requirements-lock.txt && pip install -e . --no-deps   # exact tested versions
+# or: pip install -e ".[experiments]"                                  # latest compatible versions
+python reproduce.py               # data, P1, P2 and the figures, about 4 minutes
+python reproduce.py --all         # every experiment, about 2.5 hours (--jobs 3: about 1 hour)
 ```
 
-That takes about 4 minutes. Every later phase has its own driver (`src/run_p21.py` through
-`src/run_p11.py`; `run_p8.py` and `run_p9.py` also take `--baseline`). Run one after another they take
-about an hour and a half, mostly P6 (about 40 minutes) and P7 (about 25); they are independent, so
-running a few at once cuts that to under an hour.
+`reproduce.py` runs each driver in [`experiments/`](experiments/) and compares what it prints with
+the output recorded for this release in `experiments/expected_output/`, so it answers "matches" or
+"differs" per experiment; logs and any differences go to `build/reproduce/`. Each driver also runs on
+its own, e.g. `python experiments/run_p2.py`. Checked from a fresh clone with freshly downloaded data
+on 12 October 2026: all 30 driver runs match, in 61 minutes with `--jobs 3`.
 
-Tested with Python 3.12, pandas 3.0.6 (and 2.3.3), numpy 2.5.4, scikit-learn 1.9.1, LightGBM 4.7.0,
-scipy 1.18.1, pyarrow 26 and yfinance 1.7.0; `requirements-lock.txt` pins the full set. `panel.py`
-stops and names any ticker that fails to download (`--allow-missing` carries on without it). On
-Windows without long-path support, keep the virtual environment's path short: scikit-learn's
+LightGBM runs in its deterministic mode with a fixed histogram method, and no seed is set, so its
+sampling seeds keep their fixed defaults. Every recorded output is the same with the deterministic
+settings off, at 4 threads or on all cores.
+
+The data is public daily prices from Yahoo (via yfinance), downloaded fresh, since Yahoo's terms
+don't allow committing it. The window is pinned (2018 to 2024), and `experiments/manifest.py` checks
+each built table against fingerprints of the data behind the published results, so a revised history
+shows up as a named difference rather than as unexplained numbers. One such revision is known:
+between the June and October 2026 downloads Yahoo changed Honeywell's prices by about one part in
+ten million, and every printed number still matched. `panel.py` stops and names any ticker that
+fails to download (`--allow-missing` carries on without it).
+
+On Windows without long-path support, keep the virtual environment's path short: scikit-learn's
 deepest file sits about 110 characters below it, against a 260-character limit.
-
-Every number a driver prints reproduces exactly from a fresh clone (verified October 2026 on pandas
-2.3 and 3.0). The Yahoo download itself is not frozen, so a later download could differ. Generated
-data is cached under `data/` (gitignored); delete `data/processed/synth_*.parquet` after changing the
-generator.
 
 ## Research log
 
@@ -153,18 +193,23 @@ top, with the original text left as it was.
 | P9 | Selective conformal risk control for regression | Passes: online risk 0.080 against static 0.184 under the shift; the efficiency claim is a null | [pre-reg](reports/p9_riskcontrol_preregistration.md), [results](reports/p9_riskcontrol_results.md) |
 | P10 | Does continuous kernel localization beat discrete groups? | Passes, but only 0.7% tighter: discrete groups suffice | [pre-reg](reports/p10_localized_preregistration.md), [results](reports/p10_localized_results.md) |
 | P11 | Can an e-value monitor flag the coverage break? | Detection and false-alarm checks fail as frozen; it does flag the break early on every seed | [pre-reg](reports/p11_evalue_preregistration.md), [results](reports/p11_evalue_results.md) |
+| P12 | Does a learned regime axis help group-conditional conformal when regimes recur? | Rule not met: the union absorbs the regime on its own (+0.007; a shuffled axis matches it). Post hoc, on the calibrated threshold, the learned axis lifts worst-regime coverage +0.068, equal to a true-regime oracle | [pre-reg](reports/p12_regime_axis_preregistration.md), [results](reports/p12_regime_axis_results.md) |
+| P12b | Pre-registered confirm of that post-hoc result on three fresh seeds | Passes, 6 of 6 gates on the mean: +0.055 on the calibrated threshold, noisy per seed; the parameter-free online version lifts on every seed | [pre-reg](reports/p12b_calibrated_seam_preregistration.md), [results](reports/p12b_calibrated_seam_results.md) |
+| P13 | Selection-aware calibration for the kept stocks | Passes on the three-seed mean: 0.896 against P2's 0.928, 12% narrower; noisy per seed, while the online version is nominal on every seed | [pre-reg](reports/p13_selection_aware_preregistration.md), [results](reports/p13_selection_aware_results.md) |
 
 ## Limits
 
 - The synthetic layer shows how the method behaves when the noise floor is known. It says nothing
   about how large that floor is in any real task; the real-returns layer is the external check.
-- Coverage on the kept stocks is empirical (see above).
+- P2's coverage on the kept stocks is empirical. P13's selection-aware version is finite-sample valid
+  under exchangeability, and nominal on average over seeds but not on every seed.
 - Two verdicts sit on their thresholds: P9's shift-risk check (0.0798 against 0.08) and P11's
   calm-period false alarm (e = 20.02 against 20). Tiny numerical drift could flip either one.
-- Some pre-registrations refer to a confirmation run on non-public data; it is not part of this
-  release, and those passages are replaced by a marked redaction. In October 2026 the frozen files
-  were otherwise changed only by those redactions, a few marked term edits, and the dated Corrections
-  blocks.
+- Some pre-registrations refer to a confirmation run on non-public data, or to documents and notes
+  kept with it; none of that is part of this release, and those passages are replaced by a marked
+  redaction. In October 2026 the frozen files were otherwise changed only by those redactions, a few
+  marked term edits, and the dated Corrections blocks. P13 was written in October 2026 and committed
+  before it ran.
 - [`SPEC.md`](SPEC.md) is the June 2026 design document. Results differ from it in places; the
   README and `reports/` record what was found.
 
@@ -172,11 +217,17 @@ top, with the original text left as it was.
 
 | Path | What |
 |---|---|
-| `src/` | The method (`conformal.py`, `selective.py`, `learners.py`, `eval.py`), its extensions (`simplex.py`, `riskcontrol.py`, `evalue_monitor.py`), the data (`panel.py`, `synthetic.py`), one `run_*.py` driver per phase, and `figures.py` |
+| `src/selective_conformal/` | The package: the conformal methods (`conformal.py`), learners, abstention score (`selective.py`), metrics, and the extensions (`simplex.py`, `riskcontrol.py`, `evalue_monitor.py`, `regime.py`, `pogo.py`) |
+| `experiments/` | The data pipeline (`panel.py`, `synthetic.py`, `synthetic_regime.py`), the data manifest, one `run_*.py` driver per phase, `figures.py`, and the recorded outputs |
+| `tests/` | pytest suite: no network, under a minute |
 | `examples/` | The toy-data quickstart |
 | `reports/` | A pre-registration and a results file per phase, plus the two notes |
 | `figures/` | The committed figures |
+| `reproduce.py` | One command to rerun and check the published results |
 | `data/` | Gitignored; built locally by `panel.py` and the drivers |
+
+The frozen reports refer to the drivers by their v0.2.0 paths (`src/run_p2.py`); since v0.3.0 they
+live in `experiments/`.
 
 ## Citation and license
 

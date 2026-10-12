@@ -1,3 +1,5 @@
+# Everything the experiments need. The package alone needs less: see pyproject.toml
+# (pip install -e . for the method, pip install -e ".[experiments]" for the drivers).
 numpy>=1.26
 pandas>=2.1
 pyarrow>=14         # parquet engine (data/ caches are parquet)

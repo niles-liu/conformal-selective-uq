@@ -1,7 +1,7 @@
 """Reproduce the published results with one command, and check them.
 
     python reproduce.py                 # headline: data, P1, P2, figures (about 4 minutes)
-    python reproduce.py --all           # every experiment (about 2 hours on one machine)
+    python reproduce.py --all           # every experiment (about 2.5 hours on one machine)
     python reproduce.py --all --jobs 3  # independent experiments in parallel (about 1 hour)
     python reproduce.py --only run_p9   # one experiment, plus the data it needs
 
