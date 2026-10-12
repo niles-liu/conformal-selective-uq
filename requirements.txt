@@ -1,0 +1,16 @@
+numpy>=1.26
+pandas>=2.1
+pyarrow>=14         # parquet engine (data/ caches are parquet)
+scipy>=1.11
+scikit-learn>=1.4
+lightgbm>=4.1
+matplotlib>=3.8
+# public market data for the PIT panel (no API key needed)
+yfinance>=0.2.40
+
+# Optional, not installed by default: exchange_calendars (XNYS session calendar).
+# src/_common.py imports it if present and otherwise falls back to a weekday
+# calendar. The published numbers were produced with the fallback; on the
+# Oct 2026 download both calendars keep exactly the same bars.
+#
+# The exact tested set (Python 3.12) is pinned in requirements-lock.txt.

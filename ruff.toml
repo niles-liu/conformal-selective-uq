@@ -1,0 +1,15 @@
+# Lint config for the method and experiment code. The printed numbers are recorded
+# results, so the rule set targets real defects, not cosmetic rewrites.
+# Run from the repository root: ruff check src examples
+line-length = 120
+target-version = "py312"
+
+[lint]
+# E4/E9 + W + F + I + B + BLE is the defect core; RUF100 keeps every noqa load-bearing.
+# E7xx statement-style rules are off: the experiment blocks use `x = 1; y = 2` one-liners.
+select = ["E4", "E9", "W", "F", "I", "B", "BLE", "RUF100"]
+ignore = [
+    "E501",  # length is governed by line-length, not per-line nagging
+    "B008",  # function call in a default argument, intentional for frozen defaults
+    "B905",  # zip() without strict=; adding it would change behaviour on ragged input
+]
