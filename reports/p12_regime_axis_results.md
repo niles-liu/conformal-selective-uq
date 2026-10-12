@@ -2,13 +2,12 @@
 
 > **Corrections (Oct 2026).** Checked against the pre-registration and the driver; the body is unchanged
 > apart from marked redactions.
-> - **Split.** The pre-registration describes a time-ordered 50% / 20% / 30% split. The driver uses
->   P2's date split instead (`run_p2._split`): train before 2021-01-01, calibration 2021, test from
->   2022-01-01, which is 629 / 252 / 753 sessions (38% / 15% / 46%). Every number below comes from the
->   date split. The condition the split was meant to secure still holds: all three regimes occur in
->   the calibration year on every seed. P12b's pre-registration states the date split correctly.
-> - **Reproduced.** Rerun from a fresh clone in October 2026 (pandas 3.0, numpy 2.5, LightGBM 4.7):
->   every number in the table, the band, the recovery and the G-NULL line reproduces.
+> - **Split.** The pre-registration describes a time-ordered 50% / 20% / 30% split; the driver uses
+>   P2's date split (train before 2021, calibration 2021, test from 2022: 629 / 252 / 753 sessions).
+>   Every number below comes from the date split, and all three regimes still occur in the
+>   calibration year on every seed. P12b's pre-registration states the split correctly.
+> - **Reproduced** from a fresh clone in October 2026 (pandas 3.0, numpy 2.5, LightGBM 4.7): every
+>   number in the table, the band, the recovery and the G-NULL line.
 
 > **VERDICT: REJECT-as-finding (pre-registered union gate) + a post-hoc boundary result.** On a
 > substrate where a recurring regime genuinely exists, a **learned regime axis is redundant for a

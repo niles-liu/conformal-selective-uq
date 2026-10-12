@@ -2,15 +2,13 @@ cff-version: 1.2.0
 message: "If you use this software or its methods, please cite it as below."
 title: "conformal-selective-uq: a pre-registered study of selective conformal regression under distribution shift"
 abstract: >-
-  Selective conformal regression checked against a known noise floor. The
-  demonstration task is a semi-synthetic portfolio-allocation problem on public
-  US equity data. Each stock's weight mixes a part the public features can
-  recover with a hidden component the model never sees, so the unrecoverable
-  share is known for every stock. On this testbed the abstention score finds the
-  noisy stocks (AUC 0.81), and online conformal recovers most of the
-  worst-group coverage a regime shift removes (0.51 to 0.82, target 0.90). Every
-  experiment froze its decision rule before running, and every verdict is
-  reported as pre-registered, including the checks that failed.
+  Selective conformal regression checked against a known noise floor, on a
+  semi-synthetic portfolio-allocation task built from public US equity data in
+  which each stock's unrecoverable share is known. The abstention score finds the
+  noisy stocks (AUC 0.81), and online conformal recovers most of the worst-group
+  coverage a regime shift removes (0.51 to 0.82, target 0.90). Every decision rule
+  was frozen before its run, and every verdict is reported as pre-registered,
+  including the failures.
 type: software
 authors:
   - family-names: Liu

@@ -2,16 +2,14 @@
 
 > **Corrections (Oct 2026).** Checked against the pre-registration, the driver and the per-seed
 > results; the body is unchanged apart from marked redactions.
-> - "sd 0.024" for the parameter-free arm (in the verdict and in point 3) is the spread of its
->   worst-regime coverage across the held-out seeds, not of its lift. The lift's spread is 0.011
->   (lifts +0.035 / +0.026 / +0.051), about six times tighter than the calibrated node's (0.071), not
->   "an order of magnitude".
+> - "sd 0.024" for the parameter-free arm (verdict and point 3) is the spread of its worst-regime
+>   coverage across the held-out seeds, not of its lift. The lift's spread is 0.011 (+0.035 / +0.026
+>   / +0.051), about six times tighter than the calibrated node's (0.071), not "an order of magnitude".
 > - Seed 3, where the learned axis fails on the calibrated node, has the best regime recovery of the
->   three held-out seeds (0.499, against 0.465 and 0.359), so "worst-adjacent" is wrong.
-> - **Reproduced.** Rerun from a fresh clone in October 2026: every printed coverage, gate value and
->   band reproduces. Mean widths agree to seven significant figures; Yahoo revised one stock's price
->   history by about one part in ten million between the June download behind these results and
->   the October one (`experiments/manifest.py`).
+>   held-out seeds (0.499, against 0.465 and 0.359), not "worst-adjacent".
+> - **Reproduced** from a fresh clone in October 2026: every coverage, gate value and band. Mean
+>   widths agree to seven significant figures; Yahoo revised one stock's history by about one part in
+>   ten million between the June and October downloads (`experiments/manifest.py`).
 
 > **VERDICT: CONFIRM (all six pre-registered gates pass on the held-out {3,4,5} mean) — with the
 > robust carrier being the ONLINE cross-axis-max object, not the one-shot calibrated node.** On fresh,
