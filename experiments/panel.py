@@ -23,6 +23,8 @@ Run: python experiments/panel.py            (pull prices + build panel)
 
 The pull fails loudly if any ticker cannot be downloaded, since a silently smaller
 universe would shift every downstream number. `--allow-missing` overrides that.
+After every build the data is checked against the published fingerprints
+(manifest.py), so a revised Yahoo history shows up here, not as unexplained numbers.
 """
 
 from __future__ import annotations
@@ -49,6 +51,7 @@ from _common import (
     write_parquet_atomic,
     yyyymmdd,
 )
+from manifest import check as check_manifest
 
 MOM_WINDOWS = [21, 63, 126, 252]
 RESID_WINDOWS = [21, 63]
@@ -287,6 +290,8 @@ def build() -> None:
     print(f"  {len(feat_cols)} features: {feat_cols}")
     print(f"  groups: {panel.sector.nunique()} sectors, cap_tier, mom_decile")
     print(f"  wrote {PANEL.name}")
+    print("=== data manifest ===")
+    check_manifest(["prices", "returns", "panel"])
 
 
 if __name__ == "__main__":
